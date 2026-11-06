@@ -10,9 +10,23 @@
 
 ### Windows ready-to-use ZIP — no build required
 
-[**Download the Windows ZIP from Releases**](https://github.com/isaminnthuaung-ux/ReelCraft-Studio/releases)
+> [!TIP]
+> **🟢 Get the ready-to-use Windows app**
+>
+> ### [⬇ Download Windows ZIP](https://github.com/isaminnthuaung-ux/ReelCraft-Studio/releases/latest)
+>
+> 1. **Download** `ReelCraftStudio-<version>-Windows-x64.zip`.
+> 2. Choose **Extract All**.
+> 3. Open **ReelCraftStudio.exe** inside the extracted folder.
+>
+> **✓ FFmpeg / ffprobe are included.** No separate media-tool installation, PATH changes, Node.js, or Rust needed.
 
-Download `ReelCraftStudio-<version>-Windows-x64.zip`, choose **Extract All**, then open **ReelCraftStudio.exe**. **FFmpeg and ffprobe are included**; no separate install is needed. If WebView2 is missing, run the included `prerequisites/Install-WebView2.exe` once (internet required). [Download and Actions instructions](docs/WINDOWS-DOWNLOAD.md)
+> [!NOTE]
+> **🔵 If the app cannot open because WebView2 is missing**
+>
+> Run the included `prerequisites/Install-WebView2.exe` once, then reopen the app. This step **requires an internet connection**.
+>
+> [Detailed setup and Actions download instructions](docs/WINDOWS-DOWNLOAD.md)
 
 The build commands below are for developers building from source.
 

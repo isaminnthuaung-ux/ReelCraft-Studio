@@ -20,9 +20,23 @@
 
 ### Windows အသင့်သုံး ZIP — Build လုပ်ရန် မလိုပါ
 
-[**Windows ZIP ကို Releases မှ download လုပ်ရန်**](https://github.com/isaminnthuaung-ux/ReelCraft-Studio/releases)
+> [!TIP]
+> **🟢 Windows အတွက် အသင့်သုံး App ကို ဒီမှာ ရယူပါ**
+>
+> ### [⬇ Windows ZIP Download](https://github.com/isaminnthuaung-ux/ReelCraft-Studio/releases/latest)
+>
+> 1. `ReelCraftStudio-<version>-Windows-x64.zip` ကို **download** လုပ်ပါ။
+> 2. ZIP ကို **Extract All** လုပ်ပါ။
+> 3. ထွက်လာသည့် folder ထဲက **ReelCraftStudio.exe** ကို ဖွင့်ပါ။
+>
+> **✓ FFmpeg / ffprobe တစ်ပါတည်းပါသည်။** သီးခြား install လုပ်ရန်၊ PATH ပြင်ရန်၊ Node.js / Rust ထည့်ရန် မလိုပါ။
 
-`ReelCraftStudio-<version>-Windows-x64.zip` ကို download → **Extract All** → **ReelCraftStudio.exe** ကို ဖွင့်ပါ။ **FFmpeg/ffprobe တစ်ပါတည်းပါပြီး** သီးခြား install လုပ်ရန် မလိုပါ။ WebView2 မရှိပါက ZIP ထဲက `prerequisites/Install-WebView2.exe` ကို တစ်ကြိမ် run ပါ (internet လိုအပ်သည်)။ [အသေးစိတ်နှင့် Actions download နည်း](docs/WINDOWS-DOWNLOAD.md)
+> [!NOTE]
+> **🔵 WebView2 မရှိ၍ App မပွင့်ပါက**
+>
+> ZIP ထဲက `prerequisites/Install-WebView2.exe` ကို တစ်ကြိမ် run ပြီး app ကို ပြန်ဖွင့်ပါ။ ဒီအဆင့်အတွက် **internet လိုအပ်သည်**။
+>
+> [အသေးစိတ် အသုံးပြုနည်းနှင့် Actions မှ download လုပ်နည်း](docs/WINDOWS-DOWNLOAD.md)
 
 အောက်ပါ build command များသည် source code မှ ကိုယ်တိုင် build ထုတ်ချင်သူများအတွက်သာ ဖြစ်သည်။
 
