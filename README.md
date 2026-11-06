@@ -16,17 +16,43 @@
 
 ## App ကို ဖွင့်ရန်
 
-Source မှ build လုပ်ပြီးပါက **START.bat** ကို နှစ်ချက်နှိပ်ပါ။ စာလုံးအရွယ်အစား ပိုဖတ်ရလွယ်သော UI build အတွက် **BUILD-UI.bat** ဖြင့် build လုပ်ပြီး **START-UI.bat** ဖြင့် ဖွင့်နိုင်သည်။ Launcher နှစ်ခုလုံးသည် နောက်ဆုံး build ကို ရွေးချယ်သည်။ လက်ရှိ export ပြီးဆုံးသည်အထိ စောင့်ပြီး app အဟောင်းကို ပိတ်ကာ အသစ်ပြန်ဖွင့်ပါ။
+### Final Build ရှိပြီးသားဆိုရင်
 
-Build ပြီးနောက် အသုံးပြုသည့် executable လမ်းကြောင်းမှာ:
+| OS | App ဖွင့်ရန် |
+| --- | --- |
+| Windows | `FinalBuild/Windows/ReelCraftStudio.exe` ကို နှစ်ချက်နှိပ်ပါ။ |
+| Linux | Terminal တွင် `bash FinalBuild/Linux/START.sh` ကို run ပါ။ |
+| macOS | `FinalBuild/macOS/START.command` ကို ဖွင့်ပါ။ သို့မဟုတ် `bash FinalBuild/macOS/START.sh` ကို run ပါ။ |
 
-```text
-src-tauri/target/release/ReelCraftStudio.exe
+အသုံးပြုမည့်စက်တွင် **FFmpeg နှင့် ffprobe** ကို install လုပ်ထားပြီး PATH မှ ခေါ်ယူနိုင်ရမည်။ Windows တွင် **Microsoft Edge WebView2 Runtime** လည်း လိုအပ်သည်။ Linux တွင် WebKitGTK runtime library များ လိုအပ်သည်။ မြန်မာစာအတွက် Myanmar Unicode font ကို install လုပ်ပြီး app ထဲတွင် ရွေးပါ။
+
+### Source မှ Final Build ထုတ်ရန်
+
+မိမိ OS အတွက် script **တစ်ခုကိုသာ** project folder ထဲမှ run ပါ။ Script က dependency များကို `npm ci` ဖြင့် install လုပ်ပြီး final executable ထုတ်ပေးမည်။
+
+| OS | Run ရမည့် command | ထွက်လာမည့် folder |
+| --- | --- | --- |
+| Windows | `.\BUILD-WINDOWS.bat` | `FinalBuild/Windows/` |
+| Linux | `bash BUILD-LINUX.sh` | `FinalBuild/Linux/` |
+| macOS | `bash BUILD-MAC.sh` | `FinalBuild/macOS/` |
+
+**အရင် install လုပ်ထားရန်**
+
+- OS အားလုံး: Node.js/npm၊ Rust/Cargo၊ FFmpeg နှင့် ffprobe။
+- Windows: Windows SDK ပါသော Microsoft C++ Build Tools နှင့် Edge WebView2။
+- Linux: မိမိ distribution အတွက် Tauri 2 build dependency များနှင့် system font များ။
+- macOS: Xcode Command Line Tools (`xcode-select --install`)။ Homebrew ရှိပါက `brew install ffmpeg` ဖြင့် media tool များကို install လုပ်နိုင်သည်။
+
+Ubuntu/Debian အတွက် build dependency ဥပမာ:
+
+```bash
+sudo apt update
+sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev librsvg2-dev libayatana-appindicator3-dev ffmpeg fontconfig fonts-dejavu fonts-noto-core
 ```
 
-Microsoft Edge WebView2 Runtime လိုအပ်သည်။ FFmpeg နှင့် ffprobe ကို executable ဘေးရှိ `bin/` folder ထဲတွင် ထားပါ သို့မဟုတ် PATH မှ ခေါ်ယူနိုင်အောင် ပြင်ဆင်ပါ။ Standard Chocolatey FFmpeg တည်နေရာကိုလည်း ရှာဖွေပေးသည်။ `BUILD.bat` သည် ဤစက်တွင် ရှိပြီးသား FFmpeg tool များကို release folder ထဲသို့ ကူးယူပေးသည်။
+အသေးစိတ်ကို [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) တွင် ကြည့်ပါ။ Windows အတွက် Windows ပေါ်တွင်၊ Linux အတွက် Linux ပေါ်တွင်၊ macOS အတွက် Mac ပေါ်တွင် build လုပ်ရမည်။ မိမိစက်၏ CPU architecture အတွက် ထုတ်ပေးသည်။ ဤ script များသည် portable executable ထုတ်ပေးပြီး installer၊ macOS `.app` သို့မဟုတ် DMG မထုတ်ပေးပါ။ Linux/macOS native build နှင့် runtime ကို ဒီ Windows စက်ပေါ်တွင် မစမ်းသပ်ရသေးပါ။
 
-Portable ZIP အသုံးပြုပုံကို [အသုံးပြုသူလမ်းညွှန်](docs/PUBLIC-SHARE-GUIDE.md) တွင် ဖတ်ရှုနိုင်သည်။
+ယခင် `BUILD.bat`၊ `BUILD-UI.bat` နှင့် `START*.bat` များကို development အဟောင်းအတွက် ဆက်ထားသည်။ Final build အတွက် အပေါ်က script များကိုသာ သုံးပါ။
 
 ## အသုံးပြုပုံ
 
@@ -59,29 +85,19 @@ NVIDIA NVENC ကို အမှန်တကယ် encode စမ်းသပ်�
 
 **Smart Cut** သည် အသံစွမ်းအင်ကိုသာ တိုင်းတာပြီး စကားသံကို အဓိပ္ပာယ်ဖော်ခြင်း မလုပ်ပါ။ ထို့ကြောင့် စာကြောင်းဆုံးချိန်တွင် အတိအကျ ဖြတ်နိုင်မည်ဟု အာမမခံနိုင်ပါ။ အသံအဆက်မပြတ် ကျယ်နေပါက သတ်မှတ်ချိန်အတိုင်း ဖြတ်ပြီး အသံတိတ်နေပါက တောင်းဆိုထားသော နယ်နိမိတ်ကို သုံးသည်။ နောက်ဆုံးကျန်သည့် အပိုင်းတိုကို ယခင်အပိုင်းနှင့် ပေါင်းစည်းနိုင်သည်။
 
-## Source မှ Build လုပ်ရန်
+## Development / Tests
 
-လိုအပ်သည်များမှာ Node.js/npm၊ Rust MSVC toolchain၊ Windows SDK ပါသော Microsoft C++ Build Tools၊ Edge WebView2 နှင့် FFmpeg/ffprobe တို့ဖြစ်သည်။
+Final build: see the OS-specific scripts above. Development: `npm run tauri -- dev`.
 
-```powershell
-npm.cmd install
-.\BUILD.bat
-```
-
-Development အတွက် `DEV.bat` ကို ဖွင့်ပါ။ `.tools/` ထဲရှိ project-local Rust installation ကိုလည်း အသုံးပြုနိုင်သည်။ `scripts/env.ps1` သည် လက်ရှိ process အတွက် build environment ပြင်ဆင်ပေးပြီး system PATH ကို ပြောင်းလဲခြင်း မလုပ်ပါ။ ပုံမှန် Rust developer shell မှလည်း build လုပ်နိုင်သည်။
-
-```powershell
-# Rust အသုံးပြုနိုင်သော developer shell တွင်:
+```text
 cargo test --manifest-path src-tauri/Cargo.toml -- --test-threads=1
-npm.cmd run build
-npm.cmd run test:ui
+npm run build
+npm run test:ui
 ```
-
-UI test များသည် စက်တွင် install လုပ်ထားသော Microsoft Edge နှင့် desktop bridge အတုကို အသုံးပြုသည်။ Native Rust test များသည် FFmpeg rendering၊ Unicode စာသား၊ output ပြန်အသုံးပြုမှုနှင့် cancel လုပ်ဆောင်မှုကို စစ်ဆေးသည်။ ပုံမှန် browser တွင် `npm run dev` ဖြင့် ဖွင့်ပါက native video လုပ်ဆောင်ချက်များကို ပိတ်ထားသည်။
 
 ## လက်ရှိဗားရှင်း၏ အကန့်အသတ်များ
 
-Windows အတွက်သာ ဖြစ်သည်။ Gemini၊ Whisper၊ TTS၊ social account ချိတ်ဆက်ခြင်းနှင့် online publishing လုပ်ဆောင်ချက်များ မပါဝင်ပါ။ ကိုယ်တိုင် cut boundary ပြင်ဆင်ခြင်း၊ ပိုမိုစုံလင်သော စာသားအလှဆင်မှု၊ project သိမ်းဆည်းခြင်းနှင့် encoder ကို ကိုယ်တိုင်ရွေးချယ်ခြင်းတို့သည် နောင်လုပ်ဆောင်ရန် ကျန်ရှိသည်။ NVIDIA/CPU အလိုအလျောက် ရွေးချယ်မှုကို အသုံးပြုနိုင်ပြီးဖြစ်သည်။ အစီအစဉ်အသေးစိတ်ကို [PLAN.md](PLAN.md) တွင် ဖတ်ရှုနိုင်သည်။
+Windows တွင် စမ်းသပ်ထားပြီး Linux/macOS အတွက် စမ်းသပ်အတည်ပြုရန် ကျန်ရှိသည်။ Gemini၊ Whisper၊ TTS၊ social account ချိတ်ဆက်ခြင်းနှင့် online publishing လုပ်ဆောင်ချက်များ မပါဝင်ပါ။ ကိုယ်တိုင် cut boundary ပြင်ဆင်ခြင်း၊ ပိုမိုစုံလင်သော စာသားအလှဆင်မှု၊ project သိမ်းဆည်းခြင်းနှင့် encoder ကို ကိုယ်တိုင်ရွေးချယ်ခြင်းတို့သည် နောင်လုပ်ဆောင်ရန် ကျန်ရှိသည်။ NVIDIA/CPU အလိုအလျောက် ရွေးချယ်မှုကို အသုံးပြုနိုင်ပြီးဖြစ်သည်။ အစီအစဉ်အသေးစိတ်ကို [PLAN.md](PLAN.md) တွင် ဖတ်ရှုနိုင်သည်။
 
 ## လိုင်စင်နှင့် အသိအမှတ်ပြုချက်များ
 

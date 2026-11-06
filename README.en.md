@@ -4,17 +4,43 @@
 
 **Make long video to short.** A standalone Windows video splitter rebuilt with Rust, Tauri and a modern desktop interface. No original recap application files are changed or required at runtime.
 
-## Run
+## Run the final app
 
-The app is now named **ReelCraft Studio** and uses the supplied `reelcraft.ico`. The existing project directory and internal settings identifier are retained so saved fonts/settings and export checkpoints remain available.
+| OS | Open the final build |
+| --- | --- |
+| Windows | Double-click `FinalBuild/Windows/ReelCraftStudio.exe`. |
+| Linux | Run `bash FinalBuild/Linux/START.sh`. |
+| macOS | Open `FinalBuild/macOS/START.command`, or run `bash FinalBuild/macOS/START.sh`. |
 
-**Larger-font UI update:** run **START-UI.bat** after your current export finishes and you close the old window. The updated executable uses readable Windows/Segoe UI typography and the requested VidCoder toolbar icons. Both launchers now select the newest build. It does not replace or stop an already-running export. Build it with **BUILD-UI.bat**; icon attribution and license are in `public/icons/vidcoder/`.
+The destination machine needs **FFmpeg and ffprobe** installed and available on PATH. Windows also needs **Microsoft Edge WebView2 Runtime**. Linux needs WebKitGTK runtime libraries. Install and select a Myanmar Unicode font for Myanmar text overlays.
 
-Double-click **START.bat** after building. The executable is:
+### Build from source
 
-`src-tauri/target/release/ReelCraftStudio.exe`
+Run only the script for your OS from the project directory. It runs `npm ci` and creates a native release executable.
 
-Microsoft Edge WebView2 Runtime is required. FFmpeg and ffprobe must be in `bin/` beside the executable or on PATH. This build also recognizes the standard Chocolatey FFmpeg location. `BUILD.bat` copies available FFmpeg tools into the release folder for this machine; review the tool's license/distribution requirements before redistribution.
+| Host OS | Command | Output folder |
+| --- | --- | --- |
+| Windows | `.\BUILD-WINDOWS.bat` | `FinalBuild/Windows/` |
+| Linux | `bash BUILD-LINUX.sh` | `FinalBuild/Linux/` |
+| macOS | `bash BUILD-MAC.sh` | `FinalBuild/macOS/` |
+
+Install prerequisites first:
+
+- All platforms: Node.js/npm, Rust/Cargo, FFmpeg, and ffprobe.
+- Windows: Microsoft C++ Build Tools with Windows SDK, plus Edge WebView2.
+- Linux: Tauri 2 development dependencies for your distribution and system fonts.
+- macOS: Xcode Command Line Tools (`xcode-select --install`). With Homebrew installed, use `brew install ffmpeg` for media tools.
+
+Ubuntu/Debian dependency example:
+
+```bash
+sudo apt update
+sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev librsvg2-dev libayatana-appindicator3-dev ffmpeg fontconfig fonts-dejavu fonts-noto-core
+```
+
+See [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for setup. Build each platform on its own OS, for the host CPU architecture. These scripts produce portable executables, not installers, macOS `.app` bundles, or DMGs. Linux/macOS native builds and runtime have not been tested on this Windows machine.
+
+Older `BUILD.bat`, `BUILD-UI.bat`, and `START*.bat` remain for existing development workflows. Use the scripts above for final output.
 
 ## Workflow
 
@@ -50,26 +76,16 @@ Export automatically probes NVIDIA NVENC with a real encode and uses it when ava
 
 Smart Cut uses audio energy, not speech recognition. It cannot guarantee sentence completion. Constant loud audio uses exact cuts; silent audio uses the requested boundary. A final short remainder may merge into the previous part, matching the existing splitter concept.
 
-## Build from source
+## Development / Tests
 
-Requirements: Node.js/npm, Rust MSVC toolchain, Microsoft C++ Build Tools with Windows SDK, Edge WebView2, and FFmpeg/ffprobe.
+Final build: see the OS-specific scripts above. Development: `npm run tauri -- dev`.
 
-```powershell
-npm.cmd install
-.\BUILD.bat
-```
-
-For development, run `DEV.bat`. The repository supports a project-local Rust installation in `.tools/`; no system PATH change is needed. `scripts/env.ps1` prepares the build environment for the current process only. It includes MSVC/SDK discovery for this machine's incomplete installer metadata; a normal developer shell also works.
-
-```powershell
-# In a Rust-enabled developer shell:
+```text
 cargo test --manifest-path src-tauri/Cargo.toml -- --test-threads=1
-npm.cmd run build
-npm.cmd run test:ui
+npm run build
+npm run test:ui
 ```
-
-UI tests use the installed Microsoft Edge browser. They cover interface behavior and a mocked desktop bridge; native Rust tests cover actual FFmpeg rendering, Unicode overlays, output reuse and cancellation. `npm run dev` in a normal browser intentionally disables native video operations.
 
 ## Current release scope
 
-Windows only. No Gemini/Whisper/TTS, social accounts, publishing, posting quotas or modifications to the Python recap application. The larger design is in `PLAN.md`; features such as manual boundary editing, advanced typography, project persistence and manual encoder selection remain future work; automatic NVIDIA/CPU selection is implemented.
+Windows is the currently validated platform; Linux/macOS validation is pending. No Gemini/Whisper/TTS, social accounts, publishing, posting quotas or modifications to the Python recap application. The larger design is in `PLAN.md`; features such as manual boundary editing, advanced typography, project persistence and manual encoder selection remain future work; automatic NVIDIA/CPU selection is implemented.

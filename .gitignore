@@ -43,3 +43,6 @@ Desktop.ini
 .vercel/
 *.tsbuildinfo
 next-env.d.ts
+
+# Final portable build output
+/FinalBuild/

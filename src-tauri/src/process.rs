@@ -104,7 +104,7 @@ pub fn render_progress(
 pub fn tool(name: &str) -> String {
     if let Ok(exe) = std::env::current_exe() {
         if let Some(root) = exe.parent() {
-            let path = root.join("bin").join(format!("{name}.exe"));
+            let path = root.join("bin").join(format!("{name}{}", std::env::consts::EXE_SUFFIX));
             if path.is_file() {
                 return path.to_string_lossy().into();
             }
@@ -173,7 +173,13 @@ pub fn open_folder(path: &str) -> Result<(), String> {
     if !p.is_dir() {
         return Err("The output folder does not exist yet.".into());
     }
-    command("explorer.exe")
+    #[cfg(target_os = "windows")]
+    let opener = "explorer.exe";
+    #[cfg(target_os = "macos")]
+    let opener = "open";
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+    let opener = "xdg-open";
+    command(opener)
         .arg(p)
         .spawn()
         .map_err(|e| e.to_string())?;
