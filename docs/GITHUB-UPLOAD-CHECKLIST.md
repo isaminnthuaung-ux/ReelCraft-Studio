@@ -20,7 +20,7 @@ Run Git commands from this project directory when updating this repository.
 | `docs/`, `README.md` | Documentation; manually review screenshots for personal paths or media before publishing |
 | `package.json`, `package-lock.json`, `bun.lock` | JavaScript dependencies and lockfiles; npm is the documented workflow |
 | `index.html`, `tsconfig.json`, `vite.config.ts`, `playwright.config.ts` | Frontend and test configuration |
-| Root `BUILD*`, `DEV*`, `START*` scripts | Windows build and launch helpers |
+| `BUILD-WINDOWS.bat`, `BUILD-LINUX.sh`, `BUILD-MAC.sh` | The three supported build entry points |
 | `.gitignore` | Upload exclusions |
 | `PLAN.md`, `VALIDATION.md` | Optional development notes; read before making public |
 

@@ -1,5 +1,5 @@
 // Development-only test. Launch the app with WebView2 remote debugging enabled
-// on localhost:9237 before running. No debugging flags are set by START.bat.
+// on localhost:9237 before running. Final builds do not enable remote debugging.
 import { chromium } from '@playwright/test';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';

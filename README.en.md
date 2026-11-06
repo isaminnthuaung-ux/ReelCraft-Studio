@@ -40,7 +40,6 @@ sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev
 
 See [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for setup. Build each platform on its own OS, for the host CPU architecture. These scripts produce portable executables, not installers, macOS `.app` bundles, or DMGs. Linux/macOS native builds and runtime have not been tested on this Windows machine.
 
-Older `BUILD.bat`, `BUILD-UI.bat`, and `START*.bat` remain for existing development workflows. Use the scripts above for final output.
 
 ## Workflow
 

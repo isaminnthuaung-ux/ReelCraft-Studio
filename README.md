@@ -52,7 +52,6 @@ sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev
 
 အသေးစိတ်ကို [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) တွင် ကြည့်ပါ။ Windows အတွက် Windows ပေါ်တွင်၊ Linux အတွက် Linux ပေါ်တွင်၊ macOS အတွက် Mac ပေါ်တွင် build လုပ်ရမည်။ မိမိစက်၏ CPU architecture အတွက် ထုတ်ပေးသည်။ ဤ script များသည် portable executable ထုတ်ပေးပြီး installer၊ macOS `.app` သို့မဟုတ် DMG မထုတ်ပေးပါ။ Linux/macOS native build နှင့် runtime ကို ဒီ Windows စက်ပေါ်တွင် မစမ်းသပ်ရသေးပါ။
 
-ယခင် `BUILD.bat`၊ `BUILD-UI.bat` နှင့် `START*.bat` များကို development အဟောင်းအတွက် ဆက်ထားသည်။ Final build အတွက် အပေါ်က script များကိုသာ သုံးပါ။
 
 ## အသုံးပြုပုံ
 

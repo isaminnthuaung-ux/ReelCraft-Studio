@@ -11,7 +11,7 @@ Built and checked on Windows x64 with a project-local Rust MSVC toolchain, Node.
 
 Native coverage includes source audio preservation, no-audio portrait/blur export, Unicode source filenames, Myanmar/Latin overlays, consistent Myanmar part numbering, completed-file reuse, cancellation of active FFmpeg work, source-folder collision avoidance, constant/silent audio and cut-window bounds.
 
-Tests use temporary generated footage; the native desktop smoke script stores development artifacts under ignored `.tools/native-smoke/`. Remote debugging is enabled only by the developer's smoke-test launch command; START.bat does not enable it. Native OS picker interaction is covered through the UI bridge mock, not OS-level dialog automation.
+Tests use temporary generated footage; the native desktop smoke script stores development artifacts under ignored `.tools/native-smoke/`. Remote debugging is enabled only by the developer's smoke-test launch command; final builds do not enable it. Native OS picker interaction is covered through the UI bridge mock, not OS-level dialog automation.
 
 Current limits: frame preview rather than video playback; source list and part selection are session-only; manual boundary editing and advanced text effects are not implemented. Settings/imported fonts persist separately from the original app.
 
@@ -26,7 +26,7 @@ No source files in the original Python recap application were edited during this
 - Single-run synthetic benchmark: 8 seconds of 1280x720, 30 fps footage exported as 1080x1920 with blurred background and text disabled. Previous Rust path: **2.702 s**; optimized CPU: **0.797 s**; optimized NVIDIA: **1.491 s**. This short fixture favors low CPU startup overhead; quality modes differ, and these measurements do not guarantee speed on other videos.
 - Reproduce with `node scripts/benchmark-export.mjs`. Benchmarks write only ignored synthetic fixtures under `.tools/export-benchmark/`.
 
-The final release executable also passed a native three-part export using NVIDIA NVENC with live in-part progress events. Both START.bat and START-UI.bat select the newest compiled executable.
+The final release executable also passed a native three-part export using NVIDIA NVENC with live in-part progress events. The former START launchers were used for that validation; they have since been removed in favor of the OS-specific final-build scripts.
 
 ## Font picker responsiveness ? 2026-10-27
 
