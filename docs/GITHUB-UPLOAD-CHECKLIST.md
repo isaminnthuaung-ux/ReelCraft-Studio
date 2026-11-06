@@ -41,7 +41,7 @@ The ignore file has been updated for these generated outputs and common credenti
 ## Review findings
 
 - A pattern scan of upload-candidate text files found no recognizable private keys or common access-token formats. This is not a guarantee that every possible secret is absent.
-- The packaging helper `scripts/package-public.ps1` refers to a missing `Copy/` folder and a fixed release date. Do not assume it can recreate the existing release unchanged on a fresh checkout.
+- `scripts/package-public.ps1` packages the Windows release with checksum-pinned FFmpeg, notices, WebView2 bootstrapper, source ZIP, and checksums. Generated downloads in `FinalBuild/` remain excluded from Git.
 - Build helpers support this machine's local toolchain setup. A clean-machine build was not performed for this file review.
 - Screenshots and any existing release binaries were not inspected for private content or provenance.
 

@@ -1,55 +1,111 @@
+param(
+    [string]$Executable = '',
+    [string]$DownloadCache = '',
+    [switch]$SkipWebViewDownload
+)
 $ErrorActionPreference = 'Stop'
 $taskRoot = Split-Path -Parent $PSScriptRoot
-$taskVersion = (Get-Content -LiteralPath (Join-Path $taskRoot 'package.json') -Raw | ConvertFrom-Json).version
-$taskRelease = Join-Path $taskRoot "Production\ReelCraftStudio-$taskVersion-2026-10-30"
-$taskPortable = Join-Path $taskRelease 'ReelCraftStudio'
-if (Test-Path -LiteralPath $taskRelease) { throw "Release already exists: $taskRelease. Use a new release directory." }
-$taskExecutable = Join-Path $taskRoot 'src-tauri\target\release\long-to-shot-studio.exe'
-if (-not (Test-Path -LiteralPath $taskExecutable)) { throw 'Run BUILD-WINDOWS.bat successfully before packaging.' }
-New-Item -ItemType Directory -Path "$taskPortable\bin", "$taskPortable\licenses" -Force | Out-Null
-Copy-Item -LiteralPath $taskExecutable -Destination "$taskPortable\ReelCraftStudio.exe"
-foreach ($taskTool in @('ffmpeg', 'ffprobe')) {
-    Copy-Item -LiteralPath "$taskRoot\Copy\bin\$taskTool.exe" -Destination "$taskPortable\bin\$taskTool.exe"
-}
-Copy-Item -Path "$taskRoot\Copy\licenses\*" -Destination "$taskPortable\licenses"
-Copy-Item -LiteralPath "$taskRoot\docs\PUBLIC-SHARE-GUIDE.md" -Destination "$taskPortable\READ-ME.md"
-Copy-Item -LiteralPath "$taskRoot\docs\PUBLIC-SHARE-GUIDE.md" -Destination "$taskPortable\READ-ME.txt"
-Copy-Item -LiteralPath "$taskRoot\docs\PUBLIC-SHARE-GUIDE.md" -Destination "$taskRelease\PUBLIC-SHARE-GUIDE.md"
-Copy-Item -LiteralPath "$taskRoot\docs\RELEASE-0.1.0-2026-10-30.md" -Destination "$taskRelease\RELEASE-NOTES.md"
+Set-Location $taskRoot
+if (-not $Executable) { $Executable = Join-Path $taskRoot 'src-tauri\target\release\long-to-shot-studio.exe' }
+if (-not $DownloadCache) { $DownloadCache = Join-Path $taskRoot '.tools\release-downloads' }
+if (-not (Test-Path -LiteralPath $Executable -PathType Leaf)) { throw 'Build the Windows release executable first.' }
+$taskVersion = (Get-Content package.json -Raw | ConvertFrom-Json).version
+$taskManifest = Get-Content "$PSScriptRoot\ffmpeg-windows.json" -Raw | ConvertFrom-Json
+$taskOutput = Join-Path $taskRoot 'FinalBuild\Downloads'
+$taskStage = Join-Path $taskRoot ('.tools\portable-' + [guid]::NewGuid().ToString('N'))
+$taskPortable = Join-Path $taskStage 'ReelCraftStudio'
+New-Item -ItemType Directory -Force -Path $DownloadCache,$taskOutput,"$taskPortable\bin","$taskPortable\licenses","$taskPortable\prerequisites" | Out-Null
 
-# Explicit allowlist keeps personal data, caches, local credentials and build tools out.
-$taskSource = Join-Path $taskRelease 'Source'
-New-Item -ItemType Directory -Path "$taskSource\src-tauri", "$taskSource\scripts", "$taskSource\docs" -Force | Out-Null
-foreach ($taskDirectory in @('src', 'public', 'tests', 'branding')) {
-    Copy-Item -LiteralPath "$taskRoot\$taskDirectory" -Destination $taskSource -Recurse
+$taskArchive = Join-Path $DownloadCache 'ffmpeg.zip'
+if (-not (Test-Path -LiteralPath $taskArchive)) {
+    Invoke-WebRequest -Uri $taskManifest.url -OutFile $taskArchive
 }
-foreach ($taskDirectory in @('src', 'icons', 'capabilities')) {
-    Copy-Item -LiteralPath "$taskRoot\src-tauri\$taskDirectory" -Destination "$taskSource\src-tauri" -Recurse
+if ((Get-FileHash -LiteralPath $taskArchive -Algorithm SHA256).Hash.ToLowerInvariant() -ne $taskManifest.sha256) {
+    throw 'FFmpeg checksum mismatch. Remove the cached ffmpeg.zip and retry; no unverified executable will be packaged.'
 }
-foreach ($taskFile in @('Cargo.toml', 'Cargo.lock', 'build.rs', 'tauri.conf.json')) {
-    Copy-Item -LiteralPath "$taskRoot\src-tauri\$taskFile" -Destination "$taskSource\src-tauri"
+Expand-Archive -LiteralPath $taskArchive -DestinationPath "$taskStage\ffmpeg"
+$taskFFmpeg = Get-ChildItem -LiteralPath "$taskStage\ffmpeg" -Directory | Select-Object -First 1
+foreach ($taskTool in @('ffmpeg','ffprobe')) {
+    Copy-Item -LiteralPath (Join-Path $taskFFmpeg.FullName "bin\$taskTool.exe") -Destination "$taskPortable\bin"
+    & "$taskPortable\bin\$taskTool.exe" -version | Out-File "$taskPortable\licenses\$taskTool-version.txt" -Encoding utf8
+    if ($LASTEXITCODE -ne 0) { throw "$taskTool cannot run." }
 }
-foreach ($taskFile in @('package.json', 'package-lock.json', 'tsconfig.json', 'vite.config.ts', 'playwright.config.ts', 'index.html', 'README.md', 'README.en.md', 'BUILD-WINDOWS.bat', 'BUILD-LINUX.sh', 'BUILD-MAC.sh', '.gitignore', '.gitattributes', 'LICENSE')) {
-    Copy-Item -LiteralPath "$taskRoot\$taskFile" -Destination $taskSource
-}
-foreach ($taskScript in @('env.ps1', 'build-final-windows.ps1', 'build-final-unix.sh')) { Copy-Item -LiteralPath "$taskRoot\scripts\$taskScript" -Destination "$taskSource\scripts" }
-Copy-Item -LiteralPath "$taskRoot\docs\PUBLIC-SHARE-GUIDE.md" -Destination "$taskSource\docs"
-# Preserve notices for direct frontend dependencies in addition to bundled media tools.
-foreach ($taskDependency in @('react', 'react-dom', 'lucide-react', '@tauri-apps/api', '@tauri-apps/plugin-dialog')) {
-    $taskDependencyPath = Join-Path "$taskRoot\node_modules" $taskDependency
-    $taskLicenseName = $taskDependency.Replace('/', '-').Replace('@', '')
-    Get-ChildItem -LiteralPath $taskDependencyPath -File | Where-Object { $_.Name -match '^LICENSE' } | ForEach-Object {
-        Copy-Item -LiteralPath $_.FullName -Destination "$taskPortable\licenses\$taskLicenseName-$($_.Name).txt"
+Copy-Item -LiteralPath $Executable -Destination "$taskPortable\ReelCraftStudio.exe"
+# Preserve every upstream non-binary document, including GPL notices and build details.
+$taskFFmpegNotices = Join-Path $taskPortable 'licenses\ffmpeg'
+New-Item -ItemType Directory -Path $taskFFmpegNotices | Out-Null
+Get-ChildItem -LiteralPath $taskFFmpeg.FullName | Where-Object { $_.Name -ne 'bin' } | Copy-Item -Destination $taskFFmpegNotices -Recurse
+Copy-Item -LiteralPath "$taskRoot\LICENSE" -Destination "$taskPortable\licenses\ReelCraftStudio-MIT.txt"
+Copy-Item -LiteralPath "$taskRoot\public\icons\vidcoder" -Destination "$taskPortable\licenses\vidcoder" -Recurse
+Copy-Item -LiteralPath "$PSScriptRoot\ffmpeg-windows.json" -Destination "$taskPortable\licenses\ffmpeg-provenance.json"
+Copy-Item -LiteralPath "$taskRoot\docs\WINDOWS-DOWNLOAD.md" -Destination "$taskPortable\READ-ME.md"
+# Include dependency notices for the actual installed frontend and native dependencies.
+$taskNpmNotices = Join-Path $taskPortable 'licenses\npm'
+New-Item -ItemType Directory -Path $taskNpmNotices | Out-Null
+Get-ChildItem -LiteralPath "$taskRoot\node_modules" -Filter package.json -Recurse -File | ForEach-Object {
+    $taskPackage = Get-Content -LiteralPath $_.FullName -Raw | ConvertFrom-Json
+    if ($taskPackage.name -and $taskPackage.version) {
+        $taskNoticeName = ($taskPackage.name -replace '[/@]','_') + '-' + $taskPackage.version
+        $taskLicenseFiles = @(Get-ChildItem -LiteralPath $_.DirectoryName -File | Where-Object { $_.Name -match '^(LICENSE|LICENCE|COPYING|NOTICE)' })
+        if ($taskLicenseFiles.Count) {
+            $taskNoticeFolder = Join-Path $taskNpmNotices $taskNoticeName
+            New-Item -ItemType Directory -Path $taskNoticeFolder -Force | Out-Null
+            $taskLicenseFiles | Copy-Item -Destination $taskNoticeFolder -Force
+        }
     }
 }
-Copy-Item -LiteralPath "$taskPortable\licenses" -Destination $taskSource -Recurse
-$taskPortableZip = Join-Path $taskRelease "ReelCraftStudio-$taskVersion-Windows-x64.zip"
-$taskSourceZip = Join-Path $taskRelease "ReelCraftStudio-$taskVersion-Source.zip"
-Compress-Archive -LiteralPath $taskPortable -DestinationPath $taskPortableZip -CompressionLevel Optimal
-Compress-Archive -LiteralPath $taskSource -DestinationPath $taskSourceZip -CompressionLevel Optimal
-$taskHashes = foreach ($taskArtifact in @($taskPortableZip, $taskSourceZip)) {
+$taskMetadataText = & cargo metadata --locked --format-version 1 --filter-platform x86_64-pc-windows-msvc --manifest-path src-tauri/Cargo.toml
+if ($LASTEXITCODE -ne 0) { throw 'Could not collect Rust dependency notices.' }
+$taskMetadata = $taskMetadataText | ConvertFrom-Json
+$taskCargoNotices = Join-Path $taskPortable 'licenses\rust'
+New-Item -ItemType Directory -Path $taskCargoNotices | Out-Null
+foreach ($taskCrate in $taskMetadata.packages) {
+    $taskCratePath = Split-Path -Parent $taskCrate.manifest_path
+    $taskNoticeFolder = Join-Path $taskCargoNotices ($taskCrate.name + '-' + $taskCrate.version)
+    New-Item -ItemType Directory -Path $taskNoticeFolder -Force | Out-Null
+    Get-ChildItem -LiteralPath $taskCratePath -File | Where-Object { $_.Name -match '^(LICENSE|LICENCE|COPYING|NOTICE)' } | Copy-Item -Destination $taskNoticeFolder
+    if ($taskCrate.license_file -and (Test-Path -LiteralPath (Join-Path $taskCratePath $taskCrate.license_file))) {
+        Copy-Item -LiteralPath (Join-Path $taskCratePath $taskCrate.license_file) -Destination $taskNoticeFolder -Force
+    }
+}
+$taskMetadata.packages | Select-Object name,version,license,source,repository | ConvertTo-Json -Depth 5 | Set-Content "$taskPortable\licenses\rust-dependencies.json" -Encoding utf8
+
+if (-not $SkipWebViewDownload) {
+    $taskBootstrap = Join-Path $taskPortable 'prerequisites\Install-WebView2.exe'
+    Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutFile $taskBootstrap
+    $taskSignature = Get-AuthenticodeSignature -LiteralPath $taskBootstrap
+    if ($taskSignature.Status -ne 'Valid' -or $taskSignature.SignerCertificate.Subject -notmatch 'O=Microsoft Corporation') {
+        throw 'The WebView2 bootstrapper does not have a valid Microsoft signature.'
+    }
+}
+$taskCommit = & git rev-parse HEAD
+if ($LASTEXITCODE -ne 0) { throw 'Cannot identify source commit.' }
+@"
+ReelCraft Studio $taskVersion
+Source commit: $taskCommit
+FFmpeg $($taskManifest.version), checksum verified against scripts/ffmpeg-windows.json.
+FFmpeg source: $($taskManifest.source)
+FFmpeg build provider and dependency/build information: $($taskManifest.provider)
+Original FFmpeg GPL notices and build configuration are retained in licenses/ffmpeg/ and ffmpeg-version.txt.
+ReelCraft Studio source is supplied as a separate Source.zip beside the application ZIP.
+The app's MIT license does not replace the licenses of bundled third-party components.
+WebView2 Runtime terms: https://developer.microsoft.com/microsoft-edge/webview2/
+"@ | Set-Content "$taskPortable\licenses\SOURCE-INFORMATION.txt" -Encoding utf8
+$taskZip = Join-Path $taskOutput "ReelCraftStudio-$taskVersion-Windows-x64.zip"
+# Some npm notices use pre-1980 timestamps, which the ZIP format cannot represent.
+Get-ChildItem -LiteralPath $taskPortable -Recurse -Force | ForEach-Object {
+    if ($_.LastWriteTime.Year -lt 1980 -or $_.LastWriteTime.Year -gt 2107) {
+        $_.LastWriteTime = [datetime]'2026-01-01T00:00:00'
+    }
+}
+Compress-Archive -LiteralPath $taskPortable -DestinationPath $taskZip -CompressionLevel Optimal -Force -ErrorAction Stop
+if (-not (Test-Path -LiteralPath $taskZip)) { throw 'Windows ZIP was not created.' }
+$taskSourceZip = Join-Path $taskOutput "ReelCraftStudio-$taskVersion-Source.zip"
+& git archive --format=zip --output=$taskSourceZip HEAD
+if ($LASTEXITCODE -ne 0) { throw 'Source archive creation failed.' }
+$taskHashes = foreach ($taskArtifact in @($taskZip,$taskSourceZip)) {
     $taskHash = Get-FileHash -LiteralPath $taskArtifact -Algorithm SHA256
     "$($taskHash.Hash.ToLowerInvariant())  $([IO.Path]::GetFileName($taskArtifact))"
 }
-$taskHashes | Set-Content -LiteralPath "$taskRelease\SHA256SUMS.txt" -Encoding ASCII
-Write-Output "Packaged release: $taskRelease"
+$taskHashes | Set-Content (Join-Path $taskOutput 'SHA256SUMS.txt') -Encoding ascii
+Write-Host "Windows download: $taskZip"
