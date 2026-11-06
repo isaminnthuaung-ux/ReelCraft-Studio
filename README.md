@@ -31,6 +31,15 @@
 >
 > **✓ FFmpeg / ffprobe တစ်ပါတည်းပါသည်။** သီးခြား install လုပ်ရန်၊ PATH ပြင်ရန်၊ Node.js / Rust ထည့်ရန် မလိုပါ။
 
+> [!IMPORTANT]
+> **🛡️ ပထမဆုံးဖွင့်ချိန် “Windows protected your PC” ပေါ်လာပါက**
+>
+> ReelCraft Studio သည် လက်ရှိ **code-sign မလုပ်ထားသေးသော app** ဖြစ်သောကြောင့် Windows SmartScreen က **Unknown publisher / unrecognized app** ဟု အသိပေးနိုင်သည်။ ဒီအသိပေးချက်တစ်ခုတည်းကြောင့် virus တွေ့ထားသည်ဟု မဆိုလိုပါ။
+>
+> ဒီ project ၏ [GitHub Releases](https://github.com/isaminnthuaung-ux/ReelCraft-Studio/releases) မှ ကိုယ်တိုင် download လုပ်ထားပြီး ဖိုင်ကို ယုံကြည်ပါက **More info → Run anyway** ကို နှိပ်၍ ဖွင့်နိုင်သည်။ လိုအပ်ပါက Release တွင်ပါသော `SHA256SUMS.txt` နှင့် ZIP ၏ checksum ကို တိုက်စစ်နိုင်သည်။
+>
+> ဒီရှင်းလင်းချက်သည် app ကို လုံးဝအန္တရာယ်ကင်းကြောင်း အာမခံခြင်း မဟုတ်ပါ။ Antivirus က သီးခြား threat အမည်ဖြင့် သတိပေးပါက ဆက်မဖွင့်ဘဲ စစ်ဆေးပါ။ [Microsoft ၏ SmartScreen ရှင်းလင်းချက်](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation)
+
 > [!NOTE]
 > **🔵 WebView2 မရှိ၍ App မပွင့်ပါက**
 >

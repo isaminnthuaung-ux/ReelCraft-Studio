@@ -21,6 +21,15 @@
 >
 > **✓ FFmpeg / ffprobe are included.** No separate media-tool installation, PATH changes, Node.js, or Rust needed.
 
+> [!IMPORTANT]
+> **🛡️ Seeing “Windows protected your PC” on first launch?**
+>
+> ReelCraft Studio is currently **unsigned**, so Windows SmartScreen may display **Unknown publisher / unrecognized app**. That reputation warning alone does not mean a virus has been detected.
+>
+> If you downloaded the app directly from this project's [GitHub Releases](https://github.com/isaminnthuaung-ux/ReelCraft-Studio/releases) and trust the file, choose **More info → Run anyway**. You can also compare the ZIP's checksum with the release's `SHA256SUMS.txt`.
+>
+> This is not a guarantee that the app is risk-free. If antivirus reports a specific threat separately, stop and investigate. [Microsoft's SmartScreen explanation](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation)
+
 > [!NOTE]
 > **🔵 If the app cannot open because WebView2 is missing**
 >
