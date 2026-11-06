@@ -1,0 +1,1 @@
+{"identifier":"main","description":"Local studio window and native file pickers","windows":["main"],"permissions":["core:default","dialog:allow-open"]}
