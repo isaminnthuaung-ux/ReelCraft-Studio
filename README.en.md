@@ -4,6 +4,8 @@
 
 **Make long video to short.** A standalone Windows video splitter rebuilt with Rust, Tauri and a modern desktop interface. No original recap application files are changed or required at runtime.
 
+![ReelCraft Studio workspace preview](branding/Screenshot_26.png)
+
 ## Run the final app
 
 ### Windows ready-to-use ZIP — no build required
