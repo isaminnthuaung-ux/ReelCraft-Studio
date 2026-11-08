@@ -15,7 +15,7 @@
 
 See [the update log](UPDATE_LOG.md) for version history.
 
-![ReelCraft Studio workspace preview](branding/Screenshot_26.png)
+![ReelCraft Studio workspace preview](branding/Screenshot_288.png)
 
 ## Run the final app
 
