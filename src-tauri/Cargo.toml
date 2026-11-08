@@ -1,6 +1,6 @@
 [package]
 name = "long-to-shot-studio"
-version = "0.1.0"
+version = "1.0.1"
 description = "A local Windows video splitter with Unicode text overlays"
 edition = "2021"
 

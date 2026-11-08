@@ -1,6 +1,7 @@
 param(
     [string]$Executable = '',
     [string]$DownloadCache = '',
+    [string]$WebViewBootstrapper = '',
     [switch]$SkipWebViewDownload
 )
 $ErrorActionPreference = 'Stop'
@@ -9,7 +10,10 @@ Set-Location $taskRoot
 if (-not $Executable) { $Executable = Join-Path $taskRoot 'src-tauri\target\release\long-to-shot-studio.exe' }
 if (-not $DownloadCache) { $DownloadCache = Join-Path $taskRoot '.tools\release-downloads' }
 if (-not (Test-Path -LiteralPath $Executable -PathType Leaf)) { throw 'Build the Windows release executable first.' }
-$taskVersion = (Get-Content package.json -Raw | ConvertFrom-Json).version
+$taskPackageInfo = Get-Content package.json -Raw | ConvertFrom-Json
+$taskVersion = $taskPackageInfo.version
+$taskBuildLabel = if ($taskPackageInfo.buildNumber) { "-Build-$($taskPackageInfo.buildNumber)" } else { '' }
+$taskArtifactName = "ReelCraftStudio-$taskVersion$taskBuildLabel"
 $taskManifest = Get-Content "$PSScriptRoot\ffmpeg-windows.json" -Raw | ConvertFrom-Json
 $taskOutput = Join-Path $taskRoot 'FinalBuild\Downloads'
 $taskStage = Join-Path $taskRoot ('.tools\portable-' + [guid]::NewGuid().ToString('N'))
@@ -39,6 +43,7 @@ Copy-Item -LiteralPath "$taskRoot\LICENSE" -Destination "$taskPortable\licenses\
 Copy-Item -LiteralPath "$taskRoot\public\icons\vidcoder" -Destination "$taskPortable\licenses\vidcoder" -Recurse
 Copy-Item -LiteralPath "$PSScriptRoot\ffmpeg-windows.json" -Destination "$taskPortable\licenses\ffmpeg-provenance.json"
 Copy-Item -LiteralPath "$taskRoot\docs\WINDOWS-DOWNLOAD.md" -Destination "$taskPortable\READ-ME.md"
+Copy-Item -LiteralPath "$taskRoot\UPDATE_LOG.md" -Destination "$taskPortable\UPDATE_LOG.md"
 # Include dependency notices for the actual installed frontend and native dependencies.
 $taskNpmNotices = Join-Path $taskPortable 'licenses\npm'
 New-Item -ItemType Directory -Path $taskNpmNotices | Out-Null
@@ -72,7 +77,11 @@ $taskMetadata.packages | Select-Object name,version,license,source,repository | 
 
 if (-not $SkipWebViewDownload) {
     $taskBootstrap = Join-Path $taskPortable 'prerequisites\Install-WebView2.exe'
-    Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutFile $taskBootstrap
+    if ($WebViewBootstrapper) {
+        Copy-Item -LiteralPath $WebViewBootstrapper -Destination $taskBootstrap
+    } else {
+        Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutFile $taskBootstrap
+    }
     $taskSignature = Get-AuthenticodeSignature -LiteralPath $taskBootstrap
     if ($taskSignature.Status -ne 'Valid' -or $taskSignature.SignerCertificate.Subject -notmatch 'O=Microsoft Corporation') {
         throw 'The WebView2 bootstrapper does not have a valid Microsoft signature.'
@@ -81,8 +90,8 @@ if (-not $SkipWebViewDownload) {
 $taskCommit = & git rev-parse HEAD
 if ($LASTEXITCODE -ne 0) { throw 'Cannot identify source commit.' }
 @"
-ReelCraft Studio $taskVersion
-Source commit: $taskCommit
+ReelCraft Studio $taskVersion $taskBuildLabel Beta
+Source base commit: $taskCommit (Source.zip includes the current local working tree.)
 FFmpeg $($taskManifest.version), checksum verified against scripts/ffmpeg-windows.json.
 FFmpeg source: $($taskManifest.source)
 FFmpeg build provider and dependency/build information: $($taskManifest.provider)
@@ -91,7 +100,7 @@ ReelCraft Studio source is supplied as a separate Source.zip beside the applicat
 The app's MIT license does not replace the licenses of bundled third-party components.
 WebView2 Runtime terms: https://developer.microsoft.com/microsoft-edge/webview2/
 "@ | Set-Content "$taskPortable\licenses\SOURCE-INFORMATION.txt" -Encoding utf8
-$taskZip = Join-Path $taskOutput "ReelCraftStudio-$taskVersion-Windows-x64.zip"
+$taskZip = Join-Path $taskOutput "$taskArtifactName-Windows-x64.zip"
 # Some npm notices use pre-1980 timestamps, which the ZIP format cannot represent.
 Get-ChildItem -LiteralPath $taskPortable -Recurse -Force | ForEach-Object {
     if ($_.LastWriteTime.Year -lt 1980 -or $_.LastWriteTime.Year -gt 2107) {
@@ -100,12 +109,30 @@ Get-ChildItem -LiteralPath $taskPortable -Recurse -Force | ForEach-Object {
 }
 Compress-Archive -LiteralPath $taskPortable -DestinationPath $taskZip -CompressionLevel Optimal -Force -ErrorAction Stop
 if (-not (Test-Path -LiteralPath $taskZip)) { throw 'Windows ZIP was not created.' }
-$taskSourceZip = Join-Path $taskOutput "ReelCraftStudio-$taskVersion-Source.zip"
-& git archive --format=zip --output=$taskSourceZip HEAD
-if ($LASTEXITCODE -ne 0) { throw 'Source archive creation failed.' }
+$taskSourceZip = Join-Path $taskOutput "$taskArtifactName-Source.zip"
+# Include current changes and new source files, while respecting Git exclusions.
+# Archiving HEAD alone would silently ship stale source for a local beta build.
+$taskSourceFiles = & git -c core.quotepath=false ls-files --cached --others --exclude-standard
+if ($LASTEXITCODE -ne 0) { throw 'Could not enumerate the current source snapshot.' }
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$taskSourceTemp = $taskSourceZip + '.' + [guid]::NewGuid().ToString('N') + '.partial'
+$taskSourceArchive = [IO.Compression.ZipFile]::Open($taskSourceTemp, [IO.Compression.ZipArchiveMode]::Create)
+try {
+    foreach ($taskRelativeFile in ($taskSourceFiles | Sort-Object -Unique)) {
+        $taskFullFile = [IO.Path]::GetFullPath((Join-Path $taskRoot $taskRelativeFile))
+        if (-not $taskFullFile.StartsWith($taskRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
+            throw "Source path leaves the project: $taskRelativeFile"
+        }
+        if (Test-Path -LiteralPath $taskFullFile -PathType Leaf) {
+            [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($taskSourceArchive, $taskFullFile, $taskRelativeFile.Replace('\','/'), [IO.Compression.CompressionLevel]::Optimal) | Out-Null
+        }
+    }
+} finally { $taskSourceArchive.Dispose() }
+Move-Item -LiteralPath $taskSourceTemp -Destination $taskSourceZip -Force
 $taskHashes = foreach ($taskArtifact in @($taskZip,$taskSourceZip)) {
     $taskHash = Get-FileHash -LiteralPath $taskArtifact -Algorithm SHA256
     "$($taskHash.Hash.ToLowerInvariant())  $([IO.Path]::GetFileName($taskArtifact))"
 }
 $taskHashes | Set-Content (Join-Path $taskOutput 'SHA256SUMS.txt') -Encoding ascii
 Write-Host "Windows download: $taskZip"
+Write-Host "Portable app: $taskPortable"

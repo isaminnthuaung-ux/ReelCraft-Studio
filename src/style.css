@@ -42,4 +42,8 @@
 .font-options .font-option{position:absolute;left:4px;right:4px;width:calc(100% - 8px);min-height:36px;max-height:36px;padding:7px 8px;font-family:"Segoe UI","Myanmar Text",sans-serif;white-space:nowrap;overflow:hidden}
 .font-option>span{overflow:hidden;text-overflow:ellipsis}
 .font-option.keyboard-active{background:#a8d6791a;color:#c4e2a8}
+.export-encoding{flex:0 0 175px;min-width:0}.export-encoding .field-label{margin-bottom:6px;font-size:12px}.export-encoding .select-wrap>select{min-height:36px;font-size:13px}.export-bar .destination>div{flex:1;min-width:0}.export-bar .destination-picker{max-width:100%}.export-bar .destination>.icon-button{flex-shrink:0}
+@media(max-width:1250px){.export-bar{gap:12px}.export-encoding{flex-basis:155px}.export-bar .export-status{max-width:180px;min-width:0}.export-bar .export-status>div{min-width:0}.export-bar .export-status span:not(.status-dot){max-width:100%}.export-bar .export-status strong{font-size:12px}}
 .font-options .font-option:hover,.font-options .font-option[aria-selected=true]{background:#a8d6791a;color:#c4e2a8}
+.export-bar{display:grid;grid-template-columns:minmax(0,1fr) 175px minmax(0,1fr)}.export-actions{display:flex;align-items:center;justify-content:flex-end;gap:16px;min-width:0}.export-actions .export-status,.export-actions .export-status>div{min-width:0}.export-actions .export-status strong,.export-actions .export-status span:not(.status-dot){overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}.export-actions>.primary-button,.export-actions>.stop-button{flex-shrink:0}
+@media(max-width:1250px){.export-bar{grid-template-columns:minmax(0,1fr) 155px minmax(0,1fr)}.export-actions{gap:10px}}

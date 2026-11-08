@@ -6,6 +6,17 @@
 
 ![ReelCraft Studio အသုံးပြုမျက်နှာပြင်](branding/Screenshot_26.png)
 
+## 1.0.1 · Build 2 · Beta
+
+- macOS ပုံစံ window ခလုတ်များ၊ ရောင်စုံ icon များနှင့် About အတွက် gear icon။
+- Desktop header တွင် CPU၊ GPU၊ RAM နှင့် OS အချက်အလက်များ။ Platform အလိုက် ရရှိနိုင်မှု ကွာခြားနိုင်သည်။
+- **Auto** wallpaper တစ်ပုံ သို့မဟုတ် **Split** အပေါ်/အောက် wallpaper နှစ်ပုံ ရွေးချယ်နိုင်ခြင်း။ Zoom၊ crop နှင့် preview ပေါ်တွင် ဆွဲရွှေ့နိုင်ခြင်း။
+- **Output Frame** တွင် video scale 25%–200% နှင့် ဗီဒီယို၏ ဒေါင်လိုက်နေရာ ပြင်ဆင်နိုင်ခြင်း။
+- **Fastest / Fast / Balanced / Quality** encoding profile များနှင့် NVIDIA NVENC / CPU fallback။
+- **Activity** စာမျက်နှာ၊ local project history နှင့် export အပိုင်းအားလုံးအတွက် UTF-8 title စာရင်းတစ်ဖိုင်။
+
+ဗားရှင်းမှတ်တမ်းကို [UPDATE_LOG.md](UPDATE_LOG.md) တွင် ကြည့်ပါ။
+
 ## အဓိကလုပ်ဆောင်ချက်များ
 
 - သတ်မှတ်ထားသော စက္ကန့်အလိုက် ဗီဒီယိုကို အပိုင်းများ ခွဲထုတ်ခြင်း။
@@ -25,7 +36,7 @@
 >
 > ### [⬇ Windows ZIP Download](https://github.com/isaminnthuaung-ux/ReelCraft-Studio/releases/latest)
 >
-> 1. `ReelCraftStudio-<version>-Windows-x64.zip` ကို **download** လုပ်ပါ။
+> 1. `ReelCraftStudio-1.0.1-Build-2-Windows-x64.zip` သို့မဟုတ် နောက်ဆုံးဗားရှင်း၏ ZIP ကို **download** လုပ်ပါ။
 > 2. ZIP ကို **Extract All** လုပ်ပါ။
 > 3. ထွက်လာသည့် folder ထဲက **ReelCraftStudio.exe** ကို ဖွင့်ပါ။
 >
@@ -96,7 +107,7 @@ sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev
 6. Output folder ရွေးပြီး **Export** ကို နှိပ်ပါ။ လုပ်ဆောင်မှုအသေးစိတ်ကို **Activity** တွင် ကြည့်နိုင်သည်။
 7. လိုအပ်ပါက ရပ်တန့်နိုင်သည်။ တူညီသော source၊ settings နှင့် output folder ဖြင့် ပြန်စတင်လျှင် စစ်ဆေးအတည်ပြုပြီးသော အပိုင်းများကို ပြန်အသုံးပြုနိုင်သည်။
 
-Preview သည် seek slider ပါသော frame preview ဖြစ်ပြီး အချိန်နှင့်တစ်ပြေးညီ ဗီဒီယိုဖွင့်ပြခြင်း မပါဝင်သေးပါ။ Settings နှင့် ထည့်သွင်းထားသော font များကို app ၏ Windows application-data folder တွင် သိမ်းဆည်းသည်။ Source စာရင်းနှင့် ကိုယ်တိုင်ရွေးထားသော အပိုင်းများကို session အတွင်းသာ ထိန်းသိမ်းထားသဖြင့် app ပြန်ဖွင့်ချိန်တွင် source များကို ပြန်ထည့်ပြီး analyze လုပ်ရန် လိုအပ်သည်။
+Preview သည် seek slider ပါသော frame preview ဖြစ်ပြီး အချိန်နှင့်တစ်ပြေးညီ ဗီဒီယိုဖွင့်ပြခြင်း မပါဝင်သေးပါ။ Settings နှင့် ထည့်သွင်းထားသော font များကို app ၏ private data folder တွင် သိမ်းဆည်းသည်။ **Project history** တွင် နောက်ဆုံး project 30 ခု၏ source လမ်းကြောင်း၊ အပိုင်းရွေးချယ်မှုနှင့် settings များကို သိမ်းထားသည်။ မူလဗီဒီယိုဖိုင်များ ရှိနေပါက **Open project** ဖြင့် ပြန်ဖွင့်နိုင်သည်။
 
 ## မြန်မာစာနှင့် Font များ
 
@@ -113,9 +124,23 @@ Preview သည် seek slider ပါသော frame preview ဖြစ်ပြ�
 
 Source တစ်ခုစီအတွက် လမ်းကြောင်း hash ပါသော output folder ကို အသုံးပြုသည်။ ထုတ်လုပ်သော အပိုင်းဖိုင်အမည်တွင် settings နှင့် content ကို ခွဲခြားသိနိုင်သည့် fingerprint ပါရှိသည်။ Settings ပြောင်းလဲလျှင် ဖိုင်အသစ်များ ထုတ်လုပ်ပြီး ယခင် export များကို အလိုအလျောက် မဖျက်ပါ။ Checkpoint တွင် ပြီးစီးသော ဖိုင်များကို မှတ်တမ်းတင်ပြီး ပြန်အသုံးမပြုမီ စစ်ဆေးသည်။
 
-NVIDIA NVENC ကို အမှန်တကယ် encode စမ်းသပ်ပြီး ရရှိလျှင် p5၊ VBR၊ CQ 21 ဖြင့် အသုံးပြုသည်။ Hardware စတင်ခြင်း သို့မဟုတ် encoding မအောင်မြင်လျှင် CPU H.264 (`libx264`၊ veryfast၊ CRF 20) သို့ အလိုအလျောက် ပြောင်းသည်။ အသံကို AAC ဖြင့် ထုတ်လုပ်သည်။ လုပ်ဆောင်မှုများသည် မိမိစက်ပေါ်တွင် အစဉ်လိုက် ဆောင်ရွက်ပြီး encoder၊ အမြန်နှုန်းနှင့် တိုးတက်မှုကို ပြသသည်။ Cancel လုပ်လျှင် လက်ရှိ analysis/render process ကို ရပ်တန့်သည်။
+NVIDIA NVENC ကို အမှန်တကယ် encode စမ်းသပ်ပြီး ရရှိလျှင် p1 (Fastest default)၊ VBR၊ CQ 18 ဖြင့် အသုံးပြုသည်။ Hardware စတင်ခြင်း သို့မဟုတ် encoding မအောင်မြင်လျှင် CPU H.264 (`libx264`၊ veryfast၊ CRF 20) သို့ အလိုအလျောက် ပြောင်းသည်။ အသံကို AAC ဖြင့် ထုတ်လုပ်သည်။ လုပ်ဆောင်မှုများသည် မိမိစက်ပေါ်တွင် အစဉ်လိုက် ဆောင်ရွက်ပြီး encoder၊ အမြန်နှုန်းနှင့် တိုးတက်မှုကို ပြသသည်။ Cancel လုပ်လျှင် လက်ရှိ analysis/render process ကို ရပ်တန့်သည်။
 
 **Smart Cut** သည် အသံစွမ်းအင်ကိုသာ တိုင်းတာပြီး စကားသံကို အဓိပ္ပာယ်ဖော်ခြင်း မလုပ်ပါ။ ထို့ကြောင့် စာကြောင်းဆုံးချိန်တွင် အတိအကျ ဖြတ်နိုင်မည်ဟု အာမမခံနိုင်ပါ။ အသံအဆက်မပြတ် ကျယ်နေပါက သတ်မှတ်ချိန်အတိုင်း ဖြတ်ပြီး အသံတိတ်နေပါက တောင်းဆိုထားသော နယ်နိမိတ်ကို သုံးသည်။ နောက်ဆုံးကျန်သည့် အပိုင်းတိုကို ယခင်အပိုင်းနှင့် ပေါင်းစည်းနိုင်သည်။
+
+## GitHub Actions ဖြင့် Build ထုတ်ရန်
+
+[Desktop build workflow](.github/workflows/windows-portable.yml) သည် `main` သို့ push လုပ်ချိန်၊ `main` အတွက် pull request၊ `v*` tag နှင့် **Run workflow** မှ ကိုယ်တိုင်စတင်ချိန်တွင် အလုပ်လုပ်သည်။
+
+| Platform | Architecture | Download |
+| --- | --- | --- |
+| Windows | x64 | FFmpeg / ffprobe ပါသော ZIP |
+| Linux | Ubuntu 24.04 / x64 | Native executable `.tar.gz`; FFmpeg နှင့် WebKitGTK 4.1 လိုအပ်သည် |
+| macOS | Apple Silicon arm64 | လက်မှတ်မထိုးထားသော native executable `.tar.gz`; FFmpeg လိုအပ်သည် |
+
+Repository ၏ **Actions** တွင် အောင်မြင်ပြီးသော run ကိုဖွင့်ပြီး မိမိ platform အတွက် artifact ကို download လုပ်ပါ။ Artifact ကိုဖြည်ပြီး အတွင်းရှိ archive ကို ထပ်ဖြည်ပါ။ Linux/macOS အတွက် launch script နှင့် [အသုံးပြုရန်ညွှန်ကြားချက်](docs/UNIX-DOWNLOAD.md) ပါဝင်သည်။ Installer သို့မဟုတ် macOS `.app` မဟုတ်ပါ။ Intel Mac build မပါဝင်သေးပါ။
+
+Platform အားလုံး build အောင်မြင်ပါက version tag များအတွက် package နှင့် SHA-256 checksum များကို GitHub Release သို့တင်ပေးသည်။ Actions မှ build ထုတ်နိုင်ရန် ပြင်ဆင်ထားသော source များကို commit နှင့် push လုပ်ရမည်။ Linux/macOS တွင် လက်တွေ့စမ်းသပ်အတည်ပြုရန် ကျန်ရှိသည်။
 
 ## Development / Tests
 
@@ -129,7 +154,7 @@ npm run test:ui
 
 ## လက်ရှိဗားရှင်း၏ အကန့်အသတ်များ
 
-Windows တွင် စမ်းသပ်ထားပြီး Linux/macOS အတွက် စမ်းသပ်အတည်ပြုရန် ကျန်ရှိသည်။ Gemini၊ Whisper၊ TTS၊ social account ချိတ်ဆက်ခြင်းနှင့် online publishing လုပ်ဆောင်ချက်များ မပါဝင်ပါ။ ကိုယ်တိုင် cut boundary ပြင်ဆင်ခြင်း၊ ပိုမိုစုံလင်သော စာသားအလှဆင်မှု၊ project သိမ်းဆည်းခြင်းနှင့် encoder ကို ကိုယ်တိုင်ရွေးချယ်ခြင်းတို့သည် နောင်လုပ်ဆောင်ရန် ကျန်ရှိသည်။ NVIDIA/CPU အလိုအလျောက် ရွေးချယ်မှုကို အသုံးပြုနိုင်ပြီးဖြစ်သည်။ အစီအစဉ်အသေးစိတ်ကို [PLAN.md](PLAN.md) တွင် ဖတ်ရှုနိုင်သည်။
+Windows တွင် စမ်းသပ်ထားပြီး Linux/macOS အတွက် စမ်းသပ်အတည်ပြုရန် ကျန်ရှိသည်။ Gemini၊ Whisper၊ TTS၊ social account ချိတ်ဆက်ခြင်းနှင့် online publishing လုပ်ဆောင်ချက်များ မပါဝင်ပါ။ Local project history နှင့် encoding profile ရွေးချယ်မှု ပါဝင်ပြီးဖြစ်သည်။ ကိုယ်တိုင် cut boundary ပြင်ဆင်ခြင်း၊ ပိုမိုစုံလင်သော စာသားအလှဆင်မှုနှင့် encoder ကို ကိုယ်တိုင်ရွေးချယ်ခြင်းတို့သည် နောင်လုပ်ဆောင်ရန် ကျန်ရှိသည်။ NVIDIA/CPU အလိုအလျောက် ရွေးချယ်မှုကို အသုံးပြုနိုင်ပြီးဖြစ်သည်။ အစီအစဉ်အသေးစိတ်ကို [PLAN.md](PLAN.md) တွင် ဖတ်ရှုနိုင်သည်။
 
 ## လိုင်စင်နှင့် အသိအမှတ်ပြုချက်များ
 

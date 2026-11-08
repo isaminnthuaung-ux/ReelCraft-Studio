@@ -1,3 +1,4 @@
+use crate::model::EncodingProfile;
 use crate::process::{capture, command, tool};
 use std::sync::atomic::AtomicBool;
 
@@ -13,28 +14,44 @@ impl Encoder {
             Self::Cpu => "CPU H.264",
         }
     }
-    pub fn args(self) -> &'static [&'static str] {
+    pub fn args(self, profile: EncodingProfile) -> Vec<&'static str> {
+        let (preset, cq) = match profile {
+            EncodingProfile::Fastest => ("p1", "18"),
+            EncodingProfile::Fast => ("p3", "18"),
+            EncodingProfile::Balanced => ("p5", "21"),
+            EncodingProfile::Quality => ("p7", "18"),
+        };
         match self {
-            Self::Nvidia => &[
+            Self::Nvidia => vec![
                 "-c:v",
                 "h264_nvenc",
                 "-preset",
-                "p5",
+                preset,
+                "-tune",
+                "hq",
                 "-rc",
                 "vbr",
                 "-cq",
-                "21",
+                cq,
                 "-b:v",
                 "0",
+                "-multipass",
+                "disabled",
+                "-rc-lookahead",
+                "0",
+                "-profile:v",
+                "high",
+                "-pix_fmt",
+                "yuv420p",
             ],
-            Self::Cpu => &["-c:v", "libx264", "-preset", "veryfast", "-crf", "20"],
+            Self::Cpu => vec!["-c:v", "libx264", "-preset", "veryfast", "-crf", "20"],
         }
     }
 }
 
 /// A listed encoder can still fail because of drivers or unavailable hardware.
 /// Encode two small frames to check that NVENC actually initializes.
-pub fn select(stop: &AtomicBool) -> Result<Encoder, String> {
+pub fn select(stop: &AtomicBool, profile: EncodingProfile) -> Result<Encoder, String> {
     let result = capture(
         command(&tool("ffmpeg"))
             .args([
@@ -47,7 +64,7 @@ pub fn select(stop: &AtomicBool) -> Result<Encoder, String> {
                 "-frames:v",
                 "2",
             ])
-            .args(Encoder::Nvidia.args())
+            .args(Encoder::Nvidia.args(profile))
             .args(["-f", "null", "-"]),
         stop,
     );
@@ -72,6 +89,24 @@ pub fn fallback(encoder: Encoder, failed: bool, cancelled: bool) -> Option<Encod
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn profiles_reach_nvenc_and_keep_cpu_fallback_consistent() {
+        for (profile, preset, cq) in [
+            (EncodingProfile::Fastest, "p1", "18"),
+            (EncodingProfile::Fast, "p3", "18"),
+            (EncodingProfile::Balanced, "p5", "21"),
+            (EncodingProfile::Quality, "p7", "18"),
+        ] {
+            let args = Encoder::Nvidia.args(profile);
+            assert!(args.windows(2).any(|p| p == ["-preset", preset]));
+            assert!(args.windows(2).any(|p| p == ["-cq", cq]));
+            assert_eq!(
+                Encoder::Cpu.args(profile),
+                Encoder::Cpu.args(EncodingProfile::Fastest)
+            );
+        }
+    }
+
     #[test]
     fn cpu_fallback_is_bounded_and_never_retries_stop() {
         assert_eq!(fallback(Encoder::Nvidia, true, false), Some(Encoder::Cpu));

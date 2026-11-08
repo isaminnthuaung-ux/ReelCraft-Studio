@@ -1,23 +1,32 @@
-import type { CSSProperties } from 'react';
+import type { LucideIcon, LucideProps } from 'lucide-react';
+import {
+  FileVideo2, Folder as FolderIcon, FolderOpen as FolderOpenIcon,
+  ListVideo as ListVideoIcon, Clapperboard as ClapperboardIcon,
+  Settings2 as SettingsIcon, Settings as GearIcon, PanelLeft, Volume2 as VolumeIcon,
+  Type as TypeIcon, Upload as UploadIcon, Square as StopIcon,
+  CircleHelp as HelpIcon, Monitor as MonitorIcon,
+  CircleCheck, Download,
+} from 'lucide-react';
 
-type IconProps = { size?: number | string; className?: string; strokeWidth?: number; style?: CSSProperties };
-function asset(file: string) {
-  return function VidCoderIcon({ size = 20, className = '', style }: IconProps) {
-    return <img className={`vidcoder-icon ${className}`} src={`/icons/vidcoder/${file}`} width={size} height={size} style={style} alt="" aria-hidden="true" draggable={false}/>;
+// Current-color outline symbols follow the Big Sur kit's toolbar treatment.
+function symbol(Icon: LucideIcon) {
+  return function ToolbarIcon({ size = 20, className = '', strokeWidth = 1.6, ...props }: LucideProps) {
+    return <Icon {...props} size={size} strokeWidth={strokeWidth} className={`app-icon ${className}`} aria-hidden="true" />;
   };
 }
-export const Film = asset('video-file.png');
-export const Folder = asset('folder.png');
-export const FolderOpen = asset('add_folder.png');
-export const ListVideo = asset('AddToQueue.png');
-export const Clapperboard = asset('Preview64.png');
-export const Settings2 = asset('Options.png');
-export const Columns3 = asset('EncodingSettings.png');
-export const Volume2 = asset('Audio.png');
-export const Type = asset('text_file_16x16.png');
-export const Upload = asset('ImportExport.png');
-export const Square = asset('Stop.png');
-export const CircleHelp = asset('Help.png');
-export const Monitor = asset('Windows.png');
-export const CheckCircle2 = asset('succeeded.png');
-export const ArrowDownToLine = asset('Encode.png');
+export const Film = symbol(FileVideo2);
+export const Folder = symbol(FolderIcon);
+export const FolderOpen = symbol(FolderOpenIcon);
+export const ListVideo = symbol(ListVideoIcon);
+export const Clapperboard = symbol(ClapperboardIcon);
+export const Settings2 = symbol(SettingsIcon);
+export const Settings = symbol(GearIcon);
+export const Columns3 = symbol(PanelLeft);
+export const Volume2 = symbol(VolumeIcon);
+export const Type = symbol(TypeIcon);
+export const Upload = symbol(UploadIcon);
+export const Square = symbol(StopIcon);
+export const CircleHelp = symbol(HelpIcon);
+export const Monitor = symbol(MonitorIcon);
+export const CheckCircle2 = symbol(CircleCheck);
+export const ArrowDownToLine = symbol(Download);

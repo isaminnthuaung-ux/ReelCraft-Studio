@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "ReelCraft Studio",
-  "version": "0.1.0",
+  "productName": "ReelCraftStudio-1.0.1-Build-2",
+  "version": "1.0.1",
   "identifier": "studio.longtoshot.desktop",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -12,12 +12,13 @@
   "app": {
     "windows": [
       {
-        "title": "ReelCraft Studio",
+        "title": "ReelCraftStudio-1.0.1-Build-2",
+        "decorations": false,
         "width": 1500,
         "height": 940,
         "minWidth": 1120,
         "minHeight": 720,
-        "backgroundColor": "#0d1117"
+        "backgroundColor": "#f5f5f7"
       }
     ],
     "security": {

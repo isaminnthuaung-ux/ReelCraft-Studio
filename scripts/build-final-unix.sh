@@ -8,7 +8,7 @@ for tool in npm cargo ffmpeg ffprobe; do
 done
 # Use the same lockfile and release profile on each host. No cross-compilation.
 npm ci
-npm run tauri -- build --no-bundle
+npm run tauri -- build --no-bundle -- --locked
 # Respect an explicitly configured Cargo output directory.
 target_dir="$(cargo metadata --manifest-path src-tauri/Cargo.toml --no-deps --format-version 1 | node -e 'let s="";process.stdin.on("data",d=>s+=d);process.stdin.on("end",()=>process.stdout.write(JSON.parse(s).target_directory))')"
 output="FinalBuild/$platform"

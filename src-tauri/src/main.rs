@@ -5,6 +5,7 @@ mod media;
 mod model;
 mod planner;
 mod process;
+mod system_info;
 mod text;
 use model::{Clip, Settings, Source};
 use serde::Serialize;
@@ -42,6 +43,13 @@ struct Boot {
     fonts: Vec<String>,
     tools: Vec<(String, bool)>,
     settings: Option<serde_json::Value>,
+}
+
+#[tauri::command]
+async fn system_info() -> Result<system_info::SystemInfo, String> {
+    tauri::async_runtime::spawn_blocking(system_info::read)
+        .await
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -232,6 +240,15 @@ fn open_output(path: String) -> Result<(), String> {
     process::open_folder(&path)
 }
 #[tauri::command]
+async fn import_wallpaper(path: String, studio: State<'_, Arc<Studio>>) -> Result<String, String> {
+    let job = acquire(studio.inner().clone())?;
+    tauri::async_runtime::spawn_blocking(move || {
+        media::import_wallpaper(&path, &job.0.data, &job.0.stop)
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+#[tauri::command]
 fn save_settings(settings: Settings, studio: State<Arc<Studio>>) -> Result<(), String> {
     settings.validate()?;
     export::atomic_json(&studio.data.join("settings.json"), &settings)
@@ -275,11 +292,13 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             bootstrap,
+            system_info,
             add_sources,
             analyze_source,
             preview_frame,
             render_overlay,
             import_font,
+            import_wallpaper,
             export_clips,
             cancel_job,
             open_output,

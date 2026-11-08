@@ -105,6 +105,26 @@ fn crop_overlay(image: &image::RgbaImage) -> Option<(image::RgbaImage, u32, u32)
     ))
 }
 
+/// Keep a UTF-8 title list for the successfully exported parts of this source.
+/// Rewriting after each completed/reused part also keeps cancellation resumable.
+fn save_part_title(
+    folder: &Path,
+    lines: &mut Vec<String>,
+    n: usize,
+    title: &str,
+) -> Result<(), String> {
+    let title = title.split_whitespace().collect::<Vec<_>>().join(" ");
+    if title.is_empty() {
+        return Ok(());
+    }
+    lines.push(format!("Part {n} - {title}"));
+    let temp = folder.join(".part-titles.txt.partial");
+    let output = folder.join("part-titles.txt");
+    fs::write(&temp, format!("{}\r\n", lines.join("\r\n")))
+        .and_then(|_| fs::rename(&temp, &output))
+        .map_err(|e| format!("Videos are kept, but the title list could not be saved: {e}"))
+}
+
 pub fn run(
     sources: Vec<ExportSource>,
     settings: Settings,
@@ -169,6 +189,7 @@ pub fn run(
             .unwrap_or_default();
         let (w, h) = dimensions(&source, &settings.ratio);
         let mut last = 0.0;
+        let mut title_lines = Vec::new();
         for clip in &entry.clips {
             if !clip.start.is_finite()
                 || !clip.end.is_finite()
@@ -232,6 +253,7 @@ pub fn run(
                     }
                 });
             if let Some(file) = reusable {
+                save_part_title(&folder, &mut title_lines, clip.n, &settings.text.text)?;
                 completed += 1;
                 finished_seconds += duration;
                 notify(Progress {
@@ -253,7 +275,7 @@ pub fn run(
             let mut codec = match selected_encoder {
                 Some(codec) => codec,
                 None => {
-                    let codec = encoder::select(stop)?;
+                    let codec = encoder::select(stop, settings.encoding_profile)?;
                     selected_encoder = Some(codec);
                     codec
                 }
@@ -272,20 +294,12 @@ pub fn run(
             });
             let overlay_path = folder.join(format!(".overlay-{}.png", &fp[..12]));
             let cropped = crop_overlay(&overlay);
-            let mut graph = media::frame_filter(
-                &source,
-                w,
-                h,
-                if settings.ratio == "Original" {
-                    "black"
-                } else {
-                    &settings.fill
-                },
-            );
+            let mut graph = media::framing_filter(&source, w, h, &settings);
             if let Some((pixels, x, y)) = &cropped {
                 pixels.save(&overlay_path).map_err(|e| e.to_string())?;
+                let overlay_input = 1 + settings.wallpaper_paths().len();
                 graph.push_str(&format!(
-                    ";[frame][1:v]overlay={x}:{y}:eof_action=repeat,format=yuv420p[out]"
+                    ";[frame][{overlay_input}:v]overlay={x}:{y}:eof_action=repeat,format=yuv420p[out]"
                 ));
             } else {
                 graph.push_str(";[frame]format=yuv420p[out]");
@@ -305,25 +319,37 @@ pub fn run(
                     "-i",
                     &source.path,
                 ]);
+                for path in settings.wallpaper_paths() {
+                    cmd.arg("-i").arg(path);
+                }
                 if cropped.is_some() {
                     cmd.arg("-i").arg(&overlay_path);
                 }
-                cmd.args(["-filter_complex", &graph, "-map", "[out]", "-map", "0:a:0?"])
-                    .args(codec.args())
-                    .args([
-                        "-c:a",
-                        "aac",
-                        "-b:a",
-                        "192k",
-                        "-movflags",
-                        "+faststart",
-                        "-progress",
-                        "pipe:1",
-                        "-stats_period",
-                        "0.5",
-                        "-nostats",
-                    ])
-                    .arg(&temp);
+                cmd.args([
+                    "-filter_complex",
+                    &graph,
+                    "-map",
+                    "[out]",
+                    "-map",
+                    "0:a:0?",
+                    "-t",
+                    &duration.to_string(),
+                ])
+                .args(codec.args(settings.encoding_profile))
+                .args([
+                    "-c:a",
+                    "aac",
+                    "-b:a",
+                    "192k",
+                    "-movflags",
+                    "+faststart",
+                    "-progress",
+                    "pipe:1",
+                    "-stats_period",
+                    "0.5",
+                    "-nostats",
+                ])
+                .arg(&temp);
                 render_progress(&mut cmd, stop, |seconds, speed| {
                     let fraction = (seconds / duration).clamp(0.0, 0.99);
                     high_water.set(high_water.get().max(fraction));
@@ -384,6 +410,7 @@ pub fn run(
                 },
             );
             atomic_json(&state_path, &records)?;
+            save_part_title(&folder, &mut title_lines, clip.n, &settings.text.text)?;
             files.push(out.to_string_lossy().into());
             completed += 1;
             finished_seconds += duration;
@@ -391,6 +418,18 @@ pub fn run(
                 phase: "export".into(),
                 progress: finished_seconds / total_seconds,
                 message: format!("Saved part {} of {}", completed, total),
+                clip: completed,
+                total,
+            });
+        }
+        if !title_lines.is_empty() {
+            notify(Progress {
+                phase: "titles".into(),
+                progress: finished_seconds / total_seconds,
+                message: format!(
+                    "Saved title list: {}",
+                    folder.join("part-titles.txt").display()
+                ),
                 clip: completed,
                 total,
             });
@@ -403,6 +442,21 @@ pub fn run(
 mod tests {
     use super::*;
     use crate::process::capture;
+    #[test]
+    fn title_list_preserves_unicode_numbers_and_one_line_per_part() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut lines = Vec::new();
+        save_part_title(dir.path(), &mut lines, 1, "  ကမ္ဘာ့အကြမ်းဆုံး\nCIA - S4URecap  ").unwrap();
+        save_part_title(dir.path(), &mut lines, 3, "ကမ္ဘာ့အကြမ်းဆုံး CIA - S4URecap").unwrap();
+        assert_eq!(
+            fs::read_to_string(dir.path().join("part-titles.txt")).unwrap(),
+            "Part 1 - ကမ္ဘာ့အကြမ်းဆုံး CIA - S4URecap\r\nPart 3 - ကမ္ဘာ့အကြမ်းဆုံး CIA - S4URecap\r\n"
+        );
+        assert!(!dir.path().join(".part-titles.txt.partial").exists());
+        let empty = tempfile::tempdir().unwrap();
+        save_part_title(empty.path(), &mut Vec::new(), 1, " \n ").unwrap();
+        assert!(!empty.path().join("part-titles.txt").exists());
+    }
     #[test]
     fn transparent_overlays_are_skipped_and_visible_pixels_keep_their_position() {
         let mut pixels = image::RgbaImage::new(100, 100);
@@ -479,6 +533,10 @@ mod tests {
             boxed: true,
         };
         let mut settings = Settings {
+            encoding_profile: Default::default(),
+            wallpaper: String::new(),
+            wallpaper_layout: Default::default(),
+            scale: 1.0,
             seconds: 5.0,
             smart: false,
             extra: 0.0,
@@ -506,6 +564,16 @@ mod tests {
         )
         .unwrap();
         assert_eq!(files.len(), 3);
+        let title_list = Path::new(&files[0])
+            .parent()
+            .unwrap()
+            .join("part-titles.txt");
+        let expected_titles = (1..=3)
+            .map(|n| format!("Part {n} - {}\r\n", settings.text.text))
+            .collect::<String>();
+        assert_eq!(fs::read_to_string(&title_list).unwrap(), expected_titles);
+        // Resuming must recreate a missing list while reusing completed videos.
+        fs::remove_file(&title_list).unwrap();
         let events = events.into_inner();
         assert!(events.iter().any(|p| p.phase == "rendering"));
         assert!(events.windows(2).all(|w| w[1].progress >= w[0].progress));
@@ -534,6 +602,7 @@ mod tests {
         )
         .unwrap();
         assert_eq!(files, again);
+        assert_eq!(fs::read_to_string(&title_list).unwrap(), expected_titles);
         assert_eq!(mtime, fs::metadata(&files[0]).unwrap().modified().unwrap());
 
         // Simulate a completed part written by the earlier CPU-only release.
@@ -607,7 +676,7 @@ mod tests {
         assert!(events
             .borrow()
             .iter()
-            .all(|p| p.message.starts_with("Reused")));
+            .all(|p| p.phase == "titles" || p.message.starts_with("Reused")));
     }
 
     #[test]
@@ -647,6 +716,10 @@ mod tests {
             boxed: false,
         };
         let settings = Settings {
+            encoding_profile: Default::default(),
+            wallpaper: String::new(),
+            wallpaper_layout: Default::default(),
+            scale: 1.0,
             seconds: 5.0,
             smart: false,
             extra: 0.0,

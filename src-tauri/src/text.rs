@@ -186,6 +186,10 @@ mod tests {
             boxed: true,
         };
         let mut settings = Settings {
+            encoding_profile: Default::default(),
+            wallpaper: String::new(),
+            wallpaper_layout: Default::default(),
+            scale: 1.0,
             seconds: 60.0,
             smart: false,
             extra: 0.0,
