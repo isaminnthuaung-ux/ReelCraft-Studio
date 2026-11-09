@@ -1,4 +1,4 @@
-name: Windows, Linux, and macOS builds
+name: Windows build
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: desktop-builds-${{ github.ref }}
+  group: windows-build-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -75,98 +75,16 @@ jobs:
           Tag builds also publish the ZIP as a public GitHub Release download.
           '@ >> $env:GITHUB_STEP_SUMMARY
 
-  unix:
-    name: ${{ matrix.platform }} ${{ matrix.arch }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: ubuntu-24.04
-            platform: Linux
-            arch: x64
-          - runner: macos-15
-            platform: macOS
-            arch: arm64
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 60
-    env:
-      CARGO_TERM_COLOR: always
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-          cache: npm
-      - name: Install Linux dependencies
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf libssl-dev ffmpeg
-      - name: Install macOS media tools
-        if: runner.os == 'macOS'
-        run: brew list ffmpeg >/dev/null 2>&1 || brew install ffmpeg
-      - name: Prepare Rust
-        run: |
-          rustup update stable --no-self-update
-          rustup default stable
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            src-tauri/target
-          key: desktop-${{ matrix.runner }}-${{ matrix.arch }}-${{ hashFiles('src-tauri/Cargo.lock') }}-${{ github.sha }}
-          restore-keys: |
-            desktop-${{ matrix.runner }}-${{ matrix.arch }}-${{ hashFiles('src-tauri/Cargo.lock') }}-
-      - name: Build native release
-        run: bash scripts/build-final-unix.sh '${{ matrix.platform }}'
-      - name: Check native executable and media tools
-        run: |
-          test -x 'FinalBuild/${{ matrix.platform }}/ReelCraftStudio'
-          file 'FinalBuild/${{ matrix.platform }}/ReelCraftStudio'
-          ffmpeg -version
-          ffprobe -version
-          if [ '${{ runner.os }}' = Linux ]; then
-            ldd FinalBuild/Linux/ReelCraftStudio > /tmp/reelcraft-libraries.txt
-            cat /tmp/reelcraft-libraries.txt
-            if grep -q 'not found' /tmp/reelcraft-libraries.txt; then exit 1; fi
-          else
-            otool -L FinalBuild/macOS/ReelCraftStudio
-          fi
-      - name: Archive native download
-        env:
-          PLATFORM: ${{ matrix.platform }}
-          ARCH: ${{ matrix.arch }}
-        run: |
-          label="$(node -p "const p=require('./package.json'); 'ReelCraftStudio-'+p.version+'-Build-'+p.buildNumber")-$PLATFORM-$ARCH"
-          mkdir -p FinalBuild/Downloads
-          cp LICENSE UPDATE_LOG.md docs/UNIX-DOWNLOAD.md "FinalBuild/$PLATFORM/"
-          tar -czf "FinalBuild/Downloads/$label.tar.gz" -C FinalBuild "$PLATFORM"
-          cd FinalBuild/Downloads
-          shasum -a 256 "$label.tar.gz" > "$label-SHA256SUMS.txt"
-          shasum -a 256 -c "$label-SHA256SUMS.txt"
-          tar -tzf "$label.tar.gz"
-      - uses: actions/upload-artifact@v7
-        with:
-          name: ReelCraftStudio-${{ matrix.platform }}-${{ matrix.arch }}
-          path: FinalBuild/Downloads/*
-          if-no-files-found: error
-          compression-level: 0
-          retention-days: 30
-
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [windows, unix]
+    needs: [windows]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/download-artifact@v8
         with:
-          pattern: ReelCraftStudio-*
-          merge-multiple: true
+          name: ReelCraftStudio-Windows-x64
           path: downloads
       - name: Publish release downloads
         env:
@@ -175,6 +93,6 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release create "$RELEASE_TAG" --verify-tag --title "ReelCraft Studio $RELEASE_TAG" --notes "Windows x64, Linux x64, and macOS Apple Silicon downloads. Windows includes FFmpeg and ffprobe. Linux and macOS require installed FFmpeg and platform runtime libraries; see UNIX-DOWNLOAD.md inside the archive. macOS downloads are unsigned native executables. Source archive and SHA-256 checksums are included."
+            gh release create "$RELEASE_TAG" --verify-tag --title "ReelCraft Studio $RELEASE_TAG" --notes "Windows x64 portable download with FFmpeg and ffprobe included. SHA-256 checksums are included."
           fi
-          gh release upload "$RELEASE_TAG" downloads/*.zip downloads/*.tar.gz downloads/*SHA256SUMS.txt --clobber
+          gh release upload "$RELEASE_TAG" downloads/*.zip downloads/*SHA256SUMS.txt --clobber
