@@ -32,7 +32,7 @@ Keep `public/icons/vidcoder/NOTICE.md` and `LICENSE.txt` with the toolbar assets
 - `src-tauri/target/`, `dist/`, `src-tauri/gen/`: compiled output and generated schemas.
 - `.tools/`, `.npm-cache/`: local toolchains, synthetic test media, caches, and benchmark output.
 - `test-results/`, `playwright-report/`, `*.log`: local test results and logs.
-- `Production/`: approximately 244 MB of release binaries, archives, and duplicated source at review time. Share selected release archives and checksums as release attachments separately.
+- `FinalBuild/`: generated platform builds, release archives, and checksums. Share selected release archives and checksums as release attachments separately.
 - `.env*` except example templates, `.npmrc`, signing keys, credential directories, and local editor/agent state.
 - Personal videos, exports, imported fonts, and application settings, if copied here later. The current source tree does not need these to be uploaded.
 
@@ -47,4 +47,4 @@ The ignore file has been updated for these generated outputs and common credenti
 
 ## Before the first push
 
-In the standalone repository, inspect `git status --short` and `git diff --cached --stat` after staging. Confirm that only this project's source and approved assets appear, and that `Production/`, dependencies, build output, credentials, and unrelated projects are absent.
+In the standalone repository, inspect `git status --short` and `git diff --cached --stat` after staging. Confirm that only this project's source and approved assets appear, and that generated output folders, dependencies, credentials, and unrelated projects are absent.

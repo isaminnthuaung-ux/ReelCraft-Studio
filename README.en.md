@@ -4,14 +4,19 @@
 
 **Make long video to short.** A local video splitter built with Rust, Tauri, and React, with a macOS-style desktop interface. Windows is locally validated; GitHub Actions is configured to build Windows, Linux, and macOS.
 
-## 1.0.1 · Build 2 · Beta
+## 1.1.0 · Build 3 · Beta
 
 - macOS-style window controls, colorful icons, sidebar tagline, and About gear button.
 - CPU, GPU, RAM, and OS details in the desktop header; availability varies by platform.
 - Auto wallpaper or separate top/bottom wallpapers with zoom, crop positioning, and preview dragging.
 - Output Frame controls with 25%–200% video scaling and adjustable video position.
-- Fastest, Fast, Balanced, and Quality encoding profiles; NVIDIA NVENC with CPU fallback.
-- Dedicated Activity page, local project history, and one UTF-8 title list per source export.
+- Detect input codec, frame rate, pixel format, and NVIDIA decoding support when footage is added.
+- CUDA scaling/compositing for static wallpaper, black, and crop layouts, with NVENC encoding. Dynamic blur still uses CPU filters.
+- Fastest, Fast, Balanced, and Quality profiles; Fastest prioritizes export time.
+- Clear export percentage, current part, and processing mode while a job runs.
+- Clean `Part {n} - {source name}.mp4` filenames; keep resume hashes out of visible filenames.
+- Dedicated Activity page, local project history, and `part-titles.txt` listing exported filenames.
+- Encoding profiles beneath Source and a clearer output-folder picker.
 
 See [the update log](UPDATE_LOG.md) for version history.
 
@@ -26,7 +31,7 @@ See [the update log](UPDATE_LOG.md) for version history.
 >
 > ### [⬇ Download Windows ZIP](https://github.com/isaminnthuaung-ux/ReelCraft-Studio/releases/latest)
 >
-> 1. **Download** `ReelCraftStudio-1.0.1-Build-2-Windows-x64.zip` (or the matching newer version).
+> 1. **Download** `ReelCraftStudio-1.1.0-Build-3-Windows-x64.zip` (or the matching newer version).
 > 2. Choose **Extract All**.
 > 3. Open **ReelCraftStudio.exe** inside the extracted folder.
 >

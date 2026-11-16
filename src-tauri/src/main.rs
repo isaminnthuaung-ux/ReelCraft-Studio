@@ -3,6 +3,7 @@ mod encoder;
 mod export;
 mod media;
 mod model;
+mod pipeline;
 mod planner;
 mod process;
 mod system_info;
@@ -96,7 +97,7 @@ async fn add_sources(
         files.dedup();
         files
             .into_iter()
-            .map(|p| media::probe(&p.to_string_lossy(), &job.0.stop))
+            .map(|p| media::inspect(&p.to_string_lossy(), &job.0.stop))
             .collect()
     })
     .await

@@ -72,12 +72,17 @@ test('desktop bridge import, plan, deselect and export workflow', async ({ page 
     const w = window as any;
     w.isTauri = true;
     let id=0, wallpaperImports=0;
+    const callbacks: Record<number, (event:any)=>void> = {};
     w.__TAURI_EVENT_PLUGIN_INTERNALS__={unregisterListener:()=>{}};
     w.__TAURI_INTERNALS__={
       metadata:{currentWindow:{label:'main'},currentWebview:{label:'main'}},
-      transformCallback:()=>++id,
+      transformCallback:(callback:(event:any)=>void)=>{ callbacks[++id]=callback; return id; },
       unregisterCallback:()=>{},
       invoke:async (cmd:string,args:any) => {
+        if(cmd==='plugin:event|listen') {
+          if(args.event==='studio-progress') w.__emitProgress=(payload:any)=>callbacks[args.handler]({event:'studio-progress',id:1,payload});
+          return ++id;
+        }
         if(cmd.startsWith('plugin:window|')){w.__windowCommands=[...(w.__windowCommands||[]),cmd];return 1;}
         if(cmd==='bootstrap')return {fonts:['Myanmar Text','Segoe UI',...Array.from({length:500},(_,i)=>`Test Font ${String(i).padStart(4,'0')}`)],tools:[['ffmpeg',true],['ffprobe',true]],settings:null};
         if(cmd==='system_info')return {cpu:'AMD Ryzen 9 7950X',gpus:['NVIDIA GeForce RTX 4080'],ram_bytes:34359738368,os:'Windows 11 Pro 24H2 Build 26100'};
@@ -87,7 +92,7 @@ test('desktop bridge import, plan, deselect and export workflow', async ({ page 
         if(cmd==='analyze_source')return [{n:1,start:0,end:180,cut:'pause',enabled:true},{n:2,start:180,end:360,cut:'pause',enabled:true},{n:3,start:360,end:400,cut:'end',enabled:true}];
         if(cmd==='render_overlay')return {image:'',warnings:[]};
         if(cmd==='preview_frame')return '';
-        if(cmd==='export_clips'){w.__lastExport=args;return ['part1.mp4','part3.mp4'];}
+        if(cmd==='export_clips'){w.__lastExport=args;return new Promise(resolve=>{w.__finishExport=()=>resolve(['part1.mp4','part3.mp4']);});}
         return 1;
       }
     };
@@ -95,6 +100,8 @@ test('desktop bridge import, plan, deselect and export workflow', async ({ page 
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('radio', { name: 'Fastest', exact: true })).toBeChecked();
+  await expect(page.locator('.source-panel').getByRole('group', {name:'Encoding profile'})).toBeVisible();
+  await expect(page.locator('.export-bar').getByRole('radio')).toHaveCount(0);
   await expect(page.getByLabel('System information')).toContainText('AMD Ryzen 9 7950X');
   await expect(page.getByLabel('System information')).toContainText('NVIDIA GeForce RTX 4080');
   await expect(page.getByLabel('System information')).toContainText('32.0 GiB');
@@ -135,6 +142,33 @@ test('desktop bridge import, plan, deselect and export workflow', async ({ page 
   await page.getByRole('checkbox',{name:'Export part 2'}).uncheck();
   await page.getByRole('button',{name:'Choose an output folder',exact:true}).click();
   await page.getByRole('button',{name:'Export 2 parts',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Stop safely',exact:true})).toBeVisible();
+  const processingMessage = 'NVIDIA NVENC / GPU decode + GPU filters - part 2/2 - 75% - 12.3x - Rendering a very long source video name with wallpaper, scaling, transparent titles and GPU compositing.mp4';
+  await page.evaluate(message=>(window as any).__emitProgress({phase:'rendering',progress:.875,message,clip:2,total:2}), processingMessage);
+  await expect(page.locator('.job-percentage')).toHaveText('87%');
+  await expect(page.locator('.job-part-count')).toHaveText('Part 2 / 2');
+  await expect(page.getByRole('progressbar',{name:'Overall job progress'})).toHaveAttribute('aria-valuenow','87');
+  await expect(page.getByRole('button',{name:'Change folder',exact:true})).toBeDisabled();
+  for (const viewport of [{width:1500,height:1000},{width:1120,height:800}]) {
+    await page.setViewportSize(viewport);
+    for(const selector of ['.job-percentage','.job-part-count']) {
+      const size=await page.locator(selector).evaluate(el=>({visible:el.clientWidth,content:el.scrollWidth,right:el.getBoundingClientRect().right}));
+      expect(size.content).toBeLessThanOrEqual(size.visible);
+      expect(size.right).toBeLessThanOrEqual(viewport.width);
+    }
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+    await expect(page.locator('.job-processing-detail')).toHaveText(processingMessage);
+    const detail = await page.locator('.job-processing-detail').evaluate(el=>({
+      height:el.clientHeight, contentHeight:el.scrollHeight, width:el.clientWidth, contentWidth:el.scrollWidth,
+      bottom:el.getBoundingClientRect().bottom, footerBottom:el.closest('.export-bar')!.getBoundingClientRect().bottom,
+    }));
+    expect(detail.contentHeight).toBeLessThanOrEqual(detail.height);
+    expect(detail.contentWidth).toBeLessThanOrEqual(detail.width);
+    expect(detail.bottom).toBeLessThanOrEqual(detail.footerBottom);
+    await page.screenshot({path:`test-results/export-progress-${viewport.width}.png`,fullPage:true});
+  }
+  await page.setViewportSize({width:1500,height:1000});
+  await page.evaluate(()=>(window as any).__finishExport());
   await expect(page.getByText('2 parts exported',{exact:true})).toBeVisible();
   const result=await page.evaluate(()=>(window as any).__lastExport);
   expect(result.sources[0].clips[1].enabled).toBe(false);

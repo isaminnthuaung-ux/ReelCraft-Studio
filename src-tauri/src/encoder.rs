@@ -44,7 +44,7 @@ impl Encoder {
                 "-pix_fmt",
                 "yuv420p",
             ],
-            Self::Cpu => vec!["-c:v", "libx264", "-preset", "veryfast", "-crf", "20"],
+            Self::Cpu => vec!["-c:v", "libx264", "-preset", "ultrafast", "-crf", "20"],
         }
     }
 }

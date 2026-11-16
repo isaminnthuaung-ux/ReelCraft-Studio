@@ -1,4 +1,4 @@
-export type Source = { path: string; name: string; duration: number; width: number; height: number; has_audio: boolean };
+export type Source = { path: string; name: string; duration: number; width: number; height: number; has_audio: boolean; codec?: string; pixel_format?: string; fps?: number; gpu_decode?: boolean };
 export type Clip = { n: number; start: number; end: number; cut: string; enabled: boolean };
 export type SourceItem = { source: Source; clips: Clip[] };
 export type TextLayer = { enabled: boolean; text: string; font: string; size: number; x: number; y: number; color: string; opacity: number; boxed: boolean };

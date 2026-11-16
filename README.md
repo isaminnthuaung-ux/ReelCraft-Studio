@@ -6,14 +6,19 @@
 
 ![ReelCraft Studio အသုံးပြုမျက်နှာပြင်](branding/Screenshot_288.png)
 
-## 1.0.1 · Build 2 · Beta
+## 1.1.0 · Build 3 · Beta
 
 - macOS ပုံစံ window ခလုတ်များ၊ ရောင်စုံ icon များနှင့် About အတွက် gear icon။
 - Desktop header တွင် CPU၊ GPU၊ RAM နှင့် OS အချက်အလက်များ။ Platform အလိုက် ရရှိနိုင်မှု ကွာခြားနိုင်သည်။
 - **Auto** wallpaper တစ်ပုံ သို့မဟုတ် **Split** အပေါ်/အောက် wallpaper နှစ်ပုံ ရွေးချယ်နိုင်ခြင်း။ Zoom၊ crop နှင့် preview ပေါ်တွင် ဆွဲရွှေ့နိုင်ခြင်း။
 - **Output Frame** တွင် video scale 25%–200% နှင့် ဗီဒီယို၏ ဒေါင်လိုက်နေရာ ပြင်ဆင်နိုင်ခြင်း။
-- **Fastest / Fast / Balanced / Quality** encoding profile များနှင့် NVIDIA NVENC / CPU fallback။
-- **Activity** စာမျက်နှာ၊ local project history နှင့် export အပိုင်းအားလုံးအတွက် UTF-8 title စာရင်းတစ်ဖိုင်။
+- ဗီဒီယိုထည့်သည့်အခါ codec၊ frame rate၊ pixel format နှင့် NVIDIA GPU decoding အသုံးပြုနိုင်မှုကို စစ်ဆေးခြင်း။
+- Static wallpaper၊ အမည်းနောက်ခံနှင့် crop အတွက် CUDA GPU filter များနှင့် NVENC ကို အသုံးပြုခြင်း။ Dynamic blur တွင် CPU filter ဆက်သုံးသည်။
+- **Fastest / Fast / Balanced / Quality** encoding profile များ။ Fastest သည် export အချိန်ကို ဦးစားပေးသည်။
+- Export လုပ်နေစဉ် ရာခိုင်နှုန်း၊ လက်ရှိအပိုင်းနှင့် processing mode ကို ရှင်းလင်းစွာ ပြသခြင်း။
+- Output ကို `Part {n} - {source name}.mp4` ပုံစံဖြင့် သိမ်းပြီး resume hash ကို user မြင်ရသည့် file name မှ ဖယ်ရှားခြင်း။
+- **Activity** စာမျက်နှာ၊ local project history နှင့် ထုတ်ပြီးသော filename အားလုံးပါသည့် `part-titles.txt`။
+- Encoding profile ကို Source အောက်တွင်ထားပြီး output folder ရွေးချယ်သည့် UI ကို ပိုမိုရှင်းလင်းစေခြင်း။
 
 ဗားရှင်းမှတ်တမ်းကို [UPDATE_LOG.md](UPDATE_LOG.md) တွင် ကြည့်ပါ။
 
@@ -36,7 +41,7 @@
 >
 > ### [⬇ Windows ZIP Download](https://github.com/isaminnthuaung-ux/ReelCraft-Studio/releases/latest)
 >
-> 1. `ReelCraftStudio-1.0.1-Build-2-Windows-x64.zip` သို့မဟုတ် နောက်ဆုံးဗားရှင်း၏ ZIP ကို **download** လုပ်ပါ။
+> 1. `ReelCraftStudio-1.1.0-Build-3-Windows-x64.zip` သို့မဟုတ် နောက်ဆုံးဗားရှင်း၏ ZIP ကို **download** လုပ်ပါ။
 > 2. ZIP ကို **Extract All** လုပ်ပါ။
 > 3. ထွက်လာသည့် folder ထဲက **ReelCraftStudio.exe** ကို ဖွင့်ပါ။
 >

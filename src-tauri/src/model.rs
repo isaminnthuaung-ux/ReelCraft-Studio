@@ -10,7 +10,7 @@ pub enum EncodingProfile {
     Quality,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Source {
     pub path: String,
     pub name: String,
@@ -18,6 +18,14 @@ pub struct Source {
     pub width: u32,
     pub height: u32,
     pub has_audio: bool,
+    #[serde(default)]
+    pub codec: String,
+    #[serde(default)]
+    pub pixel_format: String,
+    #[serde(default)]
+    pub fps: f64,
+    #[serde(default)]
+    pub gpu_decode: bool,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]

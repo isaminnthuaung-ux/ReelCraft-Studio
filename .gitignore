@@ -7,7 +7,7 @@ test-results/
 playwright-report/
 *.log
 
-# Packaged releases and generated Tauri schemas
+# Legacy release output. New builds and packages go under FinalBuild/.
 /Production/
 /src-tauri/gen/
 
@@ -44,5 +44,5 @@ Desktop.ini
 *.tsbuildinfo
 next-env.d.ts
 
-# Final portable build output
+# All current platform builds and release packages
 /FinalBuild/

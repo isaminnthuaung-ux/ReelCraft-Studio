@@ -56,7 +56,60 @@ pub fn probe(path: &str, stop: &AtomicBool) -> Result<Source, String> {
         width,
         height,
         has_audio: streams.iter().any(|s| s["codec_type"] == "audio"),
+        codec: video["codec_name"].as_str().unwrap_or("unknown").into(),
+        pixel_format: video["pix_fmt"].as_str().unwrap_or("unknown").into(),
+        fps: video["avg_frame_rate"]
+            .as_str()
+            .and_then(|rate| {
+                let (n, d) = rate.split_once('/')?;
+                let value = n.parse::<f64>().ok()? / d.parse::<f64>().ok()?;
+                (value.is_finite() && value > 0.0).then_some(value)
+            })
+            .unwrap_or(0.0),
+        gpu_decode: false,
     })
+}
+
+/// Test the actual input, driver and decoder together rather than trusting a GPU name.
+/// Kept separate from probe(), which is also used for inexpensive output validation.
+pub fn inspect(path: &str, stop: &AtomicBool) -> Result<Source, String> {
+    let mut source = probe(path, stop)?;
+    let transfer_format = match source.pixel_format.as_str() {
+        "yuv420p" | "nv12" => "nv12",
+        "yuv420p10le" | "p010le" => "p010le",
+        other => other,
+    };
+    let check = format!("hwdownload,format={transfer_format}");
+    source.gpu_decode = capture(
+        command(&tool("ffmpeg")).args([
+            "-v",
+            "error",
+            "-hwaccel",
+            "cuda",
+            "-hwaccel_output_format",
+            "cuda",
+            "-i",
+            &source.path,
+            "-map",
+            "0:v:0",
+            "-vf",
+            &check,
+            "-frames:v",
+            "3",
+            "-an",
+            "-sn",
+            "-dn",
+            "-f",
+            "null",
+            "-",
+        ]),
+        stop,
+    )
+    .is_ok();
+    if stop.load(std::sync::atomic::Ordering::Relaxed) {
+        return Err("Stopped. Completed parts are kept for resume.".into());
+    }
+    Ok(source)
 }
 
 pub fn levels(source: &Source, stop: &AtomicBool) -> Result<Option<Vec<f64>>, String> {
@@ -409,6 +462,7 @@ mod optimization_tests {
         no_gap.scale = 2.0;
         assert!(preview(&source, &no_gap, 0.0, &stop).is_ok());
         let text = Mutex::new(crate::text::TextEngine::new(dir.path()));
+        let events = std::cell::RefCell::new(Vec::new());
         let files = crate::export::run(
             vec![crate::export::ExportSource {
                 source,
@@ -424,9 +478,26 @@ mod optimization_tests {
             &dir.path().to_string_lossy(),
             &text,
             &stop,
-            |_| {},
+            |event| events.borrow_mut().push(event),
         )
         .unwrap();
+        if crate::encoder::select(&stop, EncodingProfile::Fastest).unwrap()
+            == crate::encoder::Encoder::Nvidia
+            && crate::pipeline::available(&stop)
+        {
+            let events = events.into_inner();
+            assert!(
+                events.iter().any(|e| e.message.contains("GPU filters")),
+                "CUDA compositing must run on this NVIDIA test machine"
+            );
+            assert!(
+                !events
+                    .iter()
+                    .any(|e| e.phase == "pipeline" || e.phase == "encoder"),
+                "GPU path silently fell back: {:?}",
+                events.iter().map(|e| &e.message).collect::<Vec<_>>()
+            );
+        }
         let exported = probe(&files[0], &stop).unwrap();
         assert_eq!((exported.width, exported.height), (1080, 1920));
         assert!((exported.duration - 1.0).abs() < 0.1);
@@ -477,6 +548,7 @@ mod optimization_tests {
             height: 1080,
             duration: 10.0,
             has_audio: false,
+            ..Default::default()
         };
         assert!(!frame_filter(&source, 1920, 1080, "blur").contains("boxblur"));
         let graph = frame_filter(&source, 1080, 1920, "blur");

@@ -3,7 +3,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import { open } from '@tauri-apps/plugin-dialog';
 import { listen } from '@tauri-apps/api/event';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
-import { ArrowLeft, ArrowRight, Check, ChevronDown, ChevronRight, History, LayoutGrid, LoaderCircle, Plus, Scissors, ShieldCheck, Sparkles, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ChevronDown, ChevronRight, History, LayoutGrid, LoaderCircle, Plus, Scissors, ShieldCheck, X } from 'lucide-react';
 import { ArrowDownToLine, CheckCircle2, Settings as SettingsGear, Clapperboard, Columns3, Film, Folder, FolderOpen, ListVideo, Monitor, Settings2, Square, Type, Upload } from './icons';
 import { call, desktop } from './bridge';
 import { defaults, clock, dimensions, encodingProfiles } from './types';
@@ -150,6 +150,7 @@ export default function App() {
       const added = await call<Source[]>('add_sources', { paths });
       setSources(prev => [...prev, ...added.filter(a => !prev.some(p => p.source.path.toLowerCase() === a.path.toLowerCase())).map(source => ({ source, clips: [] }))]);
       addLog(`${added.length} video${added.length === 1 ? '' : 's'} read.`); setExported(0);
+      added.forEach(s => addLog(`${s.name}: ${s.codec?.toUpperCase() || 'Unknown codec'} · ${s.width}×${s.height} · ${(s.fps || 0).toFixed(2)} FPS · ${s.pixel_format || 'unknown format'} · ${s.gpu_decode ? 'GPU decoding available' : 'CPU decoding'} · Fastest profile recommended for minimum export time.`));
     } catch (e) { addLog(String(e), true); } finally { setBusy(''); }
   }, [busy, addLog]);
 
@@ -238,6 +239,7 @@ export default function App() {
       if (typeof path === 'string') { const list = await call<string[]>('import_font', { path }); const added = list.filter(f => !fonts.includes(f)); setFonts(list); if (added[0]) updateLayer({ font: added[0] }); addLog('Font imported into this app’s font library.'); }
     } catch (e) { addLog(String(e), true); }
   }
+  const jobPercent = Math.floor(Math.min(1, Math.max(0, progress?.progress || 0)) * 100);
   const mediaAvailable = tools.length === 2 && tools.every(([, ok]) => ok);
   const canWork = desktop && ready && !busy && mediaAvailable;
   const [pw, ph] = source ? dimensions(source, settings.ratio) : [16, 9];
@@ -267,9 +269,10 @@ export default function App() {
         <section className="panel source-panel">
           <div className="panel-title"><span><Film size={16}/> Source videos</span><span className="count">{sources.length}</span></div>
           <div className="source-actions"><button disabled={!canWork} onClick={() => pickVideos()}><Plus size={15}/> Add videos</button><button className="icon-button" disabled={!canWork} title="Add folder" aria-label="Add folder" onClick={() => pickVideos(true)}><Folder size={16}/></button></div>
-          <div className="source-list">{!sources.length ? <div className="source-empty"><div className="empty-mini"><Film size={25}/></div><strong>Your story starts here</strong><p>Add a video or a folder.<br/>We’ll take it from there.</p><span>MP4 · MKV · MOV · WEBM · AVI</span></div> : sources.map((s, i) => <button key={s.source.path} className={`source-item ${i === selected ? 'selected' : ''}`} disabled={!!busy} onClick={() => setSelected(i)}><div className="source-thumb"><Film size={19}/><span>{String(i+1).padStart(2,'0')}</span></div><div className="source-copy"><strong title={s.source.name}>{s.source.name}</strong><span>{clock(s.source.duration)} <b>·</b> {s.source.width} × {s.source.height}</span><small>{s.clips.length ? `${s.clips.length} parts planned` : 'Ready to analyze'}</small></div><span role="button" tabIndex={0} aria-label={`Remove ${s.source.name}`} className="remove-source" onClick={e => { e.stopPropagation(); setSources(p => p.filter((_, j) => j !== i)); setSelected(0); }} onKeyDown={e => { if(e.key==='Enter'){e.stopPropagation();setSources(p=>p.filter((_,j)=>j!==i));setSelected(0);} }}><X size={12}/></span></button>)}</div>
+          <div className="source-list">{!sources.length ? <div className="source-empty"><span>MP4 · MKV · MOV · WEBM · AVI</span></div> : sources.map((s, i) => <button key={s.source.path} className={`source-item ${i === selected ? 'selected' : ''}`} disabled={!!busy} onClick={() => setSelected(i)}><div className="source-thumb"><Film size={19}/><span>{String(i+1).padStart(2,'0')}</span></div><div className="source-copy"><strong title={s.source.name}>{s.source.name}</strong><span>{s.source.name.split('.').pop()?.toUpperCase()}</span></div><span role="button" tabIndex={0} aria-label={`Remove ${s.source.name}`} className="remove-source" onClick={e => { e.stopPropagation(); setSources(p => p.filter((_, j) => j !== i)); setSelected(0); }} onKeyDown={e => { if(e.key==='Enter'){e.stopPropagation();setSources(p=>p.filter((_,j)=>j!==i));setSelected(0);} }}><X size={12}/></span></button>)}</div>
           <div className="source-summary"><div><span>Total footage</span><strong>{clock(totalDuration)}</strong></div><div><span>Planned parts</span><strong>{sources.reduce((s,e)=>s+e.clips.length,0)}</strong></div></div>
-          <div className="workflow-tip"><Sparkles size={17}/><p><strong>A cleaner cut</strong>Smart Cut looks for a nearby pause. Review the boundaries before you export.</p></div>
+          <div className="source-encoding-card"><fieldset className="source-encoding profile-picker" disabled={!!busy}><legend className="field-label">Encoding profile</legend><div className="profile-options">{encodingProfiles.map(profile=><label key={profile.value} className={`profile-box profile-${profile.value} ${settings.encoding_profile===profile.value?'is-selected':' '}`} title={profile.description}><input type="radio" name="encoding-profile" value={profile.value} checked={settings.encoding_profile===profile.value} onChange={()=>update({encoding_profile:profile.value})}/><span>{profile.label.split(' — ')[0]}</span></label>)}</div></fieldset></div>
+
         </section>
         <section className="center-column">
           <div className="panel preview-panel"><div className="panel-title"><span><Clapperboard size={16}/> Preview</span><div className="preview-meta"><span className="tiny-dot"/>{source ? `${pw} × ${ph}` : 'No video selected'}<span className="pill">{settings.ratio}</span></div></div>
@@ -294,8 +297,24 @@ export default function App() {
           </>}
         </fieldset></div></aside>
       </main>
-      <section className="export-bar"><div className="destination"><span className="destination-icon"><FolderOpen size={20}/></span><div><span className="eyebrow">SAVE YOUR PARTS</span><button className="destination-picker" disabled={!desktop||!!busy} onClick={pickOutput} title={output||'Choose output folder'}>{output||'Choose an output folder'}<ChevronDown size={13}/></button></div><button className="icon-button" aria-label="Open output folder" title="Open output folder" disabled={!output} onClick={()=>call('open_output',{path:output}).catch(e=>addLog(String(e),true))}><FolderOpen size={16}/></button></div><fieldset className="export-encoding profile-picker" disabled={!!busy}><legend className="field-label">Encoding profile</legend><div className="profile-options">{encodingProfiles.map(profile=><label key={profile.value} className={`profile-box profile-${profile.value} ${settings.encoding_profile===profile.value?'is-selected':' '}`} title={profile.description}><input type="radio" name="encoding-profile" value={profile.value} checked={settings.encoding_profile===profile.value} onChange={()=>update({encoding_profile:profile.value})}/><span>{profile.label.split(' — ')[0]}</span></label>)}</div></fieldset><div className="export-actions"><div className="export-status">{busy?<><LoaderCircle className="spin" size={16}/><div><strong>{busy}</strong><span>{progress?.message||'Working locally…'}</span></div></>:exported?<><CheckCircle2 size={18}/><div><strong>{exported} parts exported</strong><span>Your files are ready</span></div></>:<><span className="status-dot"/><div><strong>{selectedCount?`${selectedCount} parts selected`:'Ready when you are'}</strong><span>{selectedCount?'H.264 · AAC · MP4':'Add footage and analyze your cuts'}</span></div></>}</div>{busy?<button className="stop-button" onClick={()=>call('cancel_job').catch(e=>addLog(String(e),true))}><Square size={13}/> Stop safely</button>:<button className="primary-button" disabled={!canWork||!selectedCount||!output} onClick={exportAll}><ArrowDownToLine size={17}/> Export {selectedCount?`${selectedCount} parts`:'parts'}<ArrowRight size={16}/></button>}</div></section>
-      {busy&&<div className="export-progress"><span style={{width:`${Math.max(3,(progress?.progress||0)*100)}%`}}/></div>}
+      <section className="export-bar">
+        <div className="output-destination">
+          <span className="field-label">Output folder</span>
+          <div className="output-folder-row">
+            <button className="output-folder-path" aria-label="Choose an output folder" disabled={!desktop || !!busy} onClick={pickOutput} title={output || 'Choose an output folder'}><FolderOpen size={20}/><span>{output || 'Choose where to save your parts'}</span></button>
+            <button className="choose-output-button" disabled={!desktop || !!busy} onClick={pickOutput}>{output ? 'Change folder' : 'Choose folder'}</button>
+            <button className="icon-button open-output-button" aria-label="Open output folder" title="Open output folder" disabled={!output} onClick={()=>call('open_output',{path:output}).catch(e=>addLog(String(e),true))}><FolderOpen size={18}/></button>
+          </div>
+        </div>
+        <div className="export-actions">
+          {busy ? <div className="job-progress" aria-label="Current job progress">
+            <div className="job-progress-heading"><strong className="job-percentage">{jobPercent}%</strong><div><strong>{busy}</strong><span className="job-part-count">{progress?.total ? `Part ${progress.clip} / ${progress.total}` : busy === 'Exporting' ? `Preparing ${selectedCount} parts` : 'Preparing job'}</span></div></div>
+            <div className="job-progress-track" role="progressbar" aria-label="Overall job progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={jobPercent}><span style={{width:`${jobPercent}%`}}/></div>
+            <span className="job-processing-detail" title={progress?.message}>{progress?.message || 'Preparing your job?'}</span>
+          </div> : <div className="export-status">{exported ? <><CheckCircle2 size={18}/><div><strong>{exported} parts exported</strong><span>Your files are ready</span></div></> : <><span className="status-dot"/><div><strong>{selectedCount ? `${selectedCount} parts selected` : 'Ready when you are'}</strong><span>{selectedCount ? 'H.264 ? AAC ? MP4' : 'Add footage and analyze your cuts'}</span></div></>}</div>}
+          {busy ? <button className="stop-button" onClick={()=>call('cancel_job').catch(e=>addLog(String(e),true))}><Square size={13}/> Stop safely</button> : <button className="primary-button" disabled={!canWork || !selectedCount || !output} onClick={exportAll}><ArrowDownToLine size={17}/> Export {selectedCount ? `${selectedCount} parts` : 'parts'}<ArrowRight size={16}/></button>}
+        </div>
+      </section>
       </div>
       {view==='activity'&&<section className="workspace-page" aria-label="Activity log">
         <div className="page-toolbar"><div><span className="eyebrow">WORKSPACE</span><h1>Activity log</h1><p>{busy || 'Processing events for the current project.'}</p></div><button className="page-button" onClick={()=>setView('workspace')}><ArrowLeft size={15}/> Back to workspace</button></div>
