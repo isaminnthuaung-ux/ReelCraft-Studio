@@ -135,17 +135,13 @@ NVIDIA NVENC ကို အမှန်တကယ် encode စမ်းသပ်�
 
 ## GitHub Actions ဖြင့် Build ထုတ်ရန်
 
-[Desktop build workflow](.github/workflows/windows-portable.yml) သည် `main` သို့ push လုပ်ချိန်၊ `main` အတွက် pull request၊ `v*` tag နှင့် **Run workflow** မှ ကိုယ်တိုင်စတင်ချိန်တွင် အလုပ်လုပ်သည်။
+`main` သို့ push လုပ်လျှင် workflow က `package.json` ထဲမှ version/build number ကိုသုံးပြီး `v{version}-build.{buildNumber}` tag အရင်ဖန်တီးကာ ထို tag ကို Windows တွင် build လုပ်သည်။ Pull request များတွင်လည်း Windows validation build လုပ်သည်။ Build number ကို release အသစ်တစ်ခုစီတွင် တိုးပါ။ ထို tag က အခြား commit ကို ညွှန်နေပြီးသားဆိုလျှင် workflow ရပ်ပြီး version/build number တိုးရန် ပြောမည်။ `v*` tag ကို တိုက်ရိုက် push လုပ်ခြင်း သို့မဟုတ် tag ပေါ်မှ **Run workflow** လုပ်ခြင်းဖြင့် ပြန် build လုပ်နိုင်သည်။
 
-| Platform | Architecture | Download |
-| --- | --- | --- |
-| Windows | x64 | FFmpeg / ffprobe ပါသော ZIP |
-| Linux | Ubuntu 24.04 / x64 | Native executable `.tar.gz`; FFmpeg နှင့် WebKitGTK 4.1 လိုအပ်သည် |
-| macOS | Apple Silicon arm64 | လက်မှတ်မထိုးထားသော native executable `.tar.gz`; FFmpeg လိုအပ်သည် |
+ဒီ workflow သည် **Windows x64 ကိုသာ** build လုပ်ပြီး FFmpeg / ffprobe ပါသော portable ZIP ထုတ်ပေးသည်။ Actions artifact ကို ရက် ၃၀ သိမ်းထားသည်။
 
-Repository ၏ **Actions** တွင် အောင်မြင်ပြီးသော run ကိုဖွင့်ပြီး မိမိ platform အတွက် artifact ကို download လုပ်ပါ။ Artifact ကိုဖြည်ပြီး အတွင်းရှိ archive ကို ထပ်ဖြည်ပါ။ Linux/macOS အတွက် launch script နှင့် [အသုံးပြုရန်ညွှန်ကြားချက်](docs/UNIX-DOWNLOAD.md) ပါဝင်သည်။ Installer သို့မဟုတ် macOS `.app` မဟုတ်ပါ။ Intel Mac build မပါဝင်သေးပါ။
+Repository ၏ **Actions** တွင် အောင်မြင်ပြီးသော run ကိုဖွင့်ပြီး Windows artifact ကို download လုပ်ပါ။ Artifact ကိုဖြည်ပြီး အတွင်းရှိ ZIP ကို ထပ်ဖြည်ပါ။
 
-Platform အားလုံး build အောင်မြင်ပါက version tag များအတွက် package နှင့် SHA-256 checksum များကို GitHub Release သို့တင်ပေးသည်။ Actions မှ build ထုတ်နိုင်ရန် ပြင်ဆင်ထားသော source များကို commit နှင့် push လုပ်ရမည်။ Linux/macOS တွင် လက်တွေ့စမ်းသပ်အတည်ပြုရန် ကျန်ရှိသည်။
+Windows build အောင်မြင်ပါက ZIP နှင့် SHA-256 checksum ကို ထို version tag အမည်ဖြင့် GitHub Release သို့တင်ပေးသည်။ Actions မှ build ထုတ်နိုင်ရန် ပြင်ဆင်ထားသော source များကို commit နှင့် push လုပ်ရမည်။
 
 ## Development / Tests
 

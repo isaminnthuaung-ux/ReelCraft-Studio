@@ -24,8 +24,8 @@ Requires Windows 10/11 **x64** and Microsoft WebView2 Runtime. If WebView2 is mi
 
 ## Maintainers: GitHub Actions
 
-- A push to `main` or **Actions → Windows ready-to-use ZIP → Run workflow** builds a tested download artifact (retained for 30 days). Download the artifact, extract it, then extract the application ZIP inside.
-- Push a version tag such as `v0.1.0` to publish the ZIP, source ZIP, and `SHA256SUMS.txt` under **Releases**. Release asset links are suitable for users who are not signed in to GitHub when the repository is public.
+- Pull requests to `main` run a Windows validation build. A push to `main` creates `v{version}-build.{buildNumber}` from `package.json`, then builds that tag and publishes the tested ZIP and `SHA256SUMS.txt` as an Actions artifact and GitHub Release. Increment `buildNumber` for each new main-branch release; an existing tag pointing to another commit stops the workflow.
+- A `v*` tag push or **Actions → Windows build → Run workflow** from a tag rebuilds that tagged version. A manual run from `main` follows the automatic tag-and-build flow.
 - The workflow uses Windows x64, a release Rust build, and static CRT linking. FFmpeg is pinned in `scripts/ffmpeg-windows.json` and verified with SHA-256 before use.
 - The packaging test extracts the actual ZIP, checks required files and app identity, runs a synthetic H.264/AAC encode with bundled FFmpeg, probes it with bundled ffprobe, and verifies archive checksums. It does not automate GUI interaction.
 - FFmpeg upstream notices, build information, version output, frontend/native dependency notices, and VidCoder asset notices are included. Keep these notices when redistributing. The application source ZIP does not replace the corresponding source of FFmpeg or its external libraries; consult the retained upstream build/source information for those components.

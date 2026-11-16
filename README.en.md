@@ -2,7 +2,7 @@
 
 [မြန်မာ (မူလ)](README.md) | **English**
 
-**Make long video to short.** A local video splitter built with Rust, Tauri, and React, with a macOS-style desktop interface. Windows is locally validated; GitHub Actions is configured to build Windows, Linux, and macOS.
+**Make long video to short.** A local video splitter built with Rust, Tauri, and React, with a macOS-style desktop interface. Windows is locally validated; GitHub Actions builds the Windows x64 release.
 
 ## 1.1.0 · Build 3 · Beta
 
@@ -171,17 +171,11 @@ Smart Cut uses audio energy, not speech recognition. It cannot guarantee sentenc
 
 ## GitHub Actions builds
 
-The [desktop build workflow](.github/workflows/windows-portable.yml) runs on pushes to `main`, pull requests targeting `main`, `v*` tags, and manual **Run workflow** requests.
+Pull requests targeting `main` run a Windows validation build. A push to `main` first creates the version tag `v{version}-build.{buildNumber}`, then builds that tag on Windows. The workflow publishes its tested ZIP and SHA-256 checksum to GitHub Releases. Increment `buildNumber` in `package.json` for each new main-branch release; the workflow stops if that version tag already belongs to another commit. Pushing a `v*` tag or manually running the workflow on a tag rebuilds that tag.
 
-| Platform | Runner / architecture | Download |
-| --- | --- | --- |
-| Windows | Windows / x64 | ZIP with FFmpeg and ffprobe included |
-| Linux | Ubuntu 24.04 / x64 | Native executable `.tar.gz`; install FFmpeg and WebKitGTK 4.1 |
-| macOS | macOS 15 / Apple Silicon arm64 | Unsigned native executable `.tar.gz`; install FFmpeg |
+The workflow builds **Windows x64 only**, using `windows-latest`. The portable ZIP includes FFmpeg and ffprobe. Its Actions artifact is retained for 30 days.
 
-Open the repository's **Actions** tab, select a successful run, and download the matching artifact. Extract the artifact and then its included archive. Linux/macOS packages include launch scripts and [setup instructions](docs/UNIX-DOWNLOAD.md); these are native executables, not `.app` bundles or installers. Intel Mac builds are not included.
-
-Version tags publish packages and SHA-256 checksums to GitHub Releases after all platforms succeed. Source changes must be committed and pushed before Actions can build them. Linux/macOS execution still needs validation on those systems.
+Open the repository's **Actions** tab, select a successful run, and download the Windows artifact. Extract the artifact and then its included ZIP. Source changes must be committed and pushed before Actions can build them.
 
 ## Development / Tests
 
