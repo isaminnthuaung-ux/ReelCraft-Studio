@@ -4,6 +4,7 @@ import { desktop } from './bridge';
 import { version, buildNumber } from '../package.json';
 
 export default function WindowTitlebar({ onError }: { onError: (message: string) => void }) {
+  const preview = new URLSearchParams(window.location.search).has('window-frame');
   async function act(action: 'close' | 'minimize' | 'maximize') {
     if (!desktop) return;
     try {
@@ -13,7 +14,8 @@ export default function WindowTitlebar({ onError }: { onError: (message: string)
       else await window.toggleMaximize();
     } catch (error) { onError(`Window control: ${error}`); }
   }
-  return <div className="mac-titlebar" data-tauri-drag-region>
+  if (!desktop && !preview) return null;
+  return <div className={`mac-titlebar ${preview && !desktop ? 'browser-window-preview' : ''}`} data-tauri-drag-region>
     <div className="traffic-lights" role="toolbar" aria-label="Window controls">
       <button className="traffic-button traffic-close" aria-label="Close window" title="Close window" disabled={!desktop} onClick={()=>void act('close')}><span className="traffic-circle"><X size={9}/></span></button>
       <button className="traffic-button traffic-minimize" aria-label="Minimize window" title="Minimize window" disabled={!desktop} onClick={()=>void act('minimize')}><span className="traffic-circle"><Minus size={9}/></span></button>
